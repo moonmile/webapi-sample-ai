@@ -13,8 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // お寿司配膳システムの初期データを投入
+        $this->call([
+            CategorySeeder::class,
+            SeatSeeder::class,
+            ProductSeeder::class,
+            ProductCategorySeeder::class,
+            ProductStockSeeder::class,
+        ]);
 
+        // テストユーザーの作成（開発用）
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
