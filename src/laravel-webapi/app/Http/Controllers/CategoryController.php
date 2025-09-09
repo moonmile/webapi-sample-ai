@@ -27,6 +27,7 @@ class CategoryController extends Controller
         ]);
     }
 
+
     /**
      * カテゴリ作成
      * POST /api/categories

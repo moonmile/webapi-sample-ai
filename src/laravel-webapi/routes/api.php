@@ -37,7 +37,7 @@ Route::get('/', function () {
 // Hello World エンドポイント
 Route::get('/hello', [HelloController::class, 'index'])->name('hello.index');
 
-
+/*
 
 // ========== リソース API エンドポイント ==========
 
@@ -109,3 +109,4 @@ Route::middleware(['auth:api'])->group(function () {
     //     Route::delete('products/{id}', [ProductController::class, 'destroy']);
     // });
 });
+*/
