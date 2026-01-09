@@ -17,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
         // API キー認証ミドルウェアを API グループに適用
         // $middleware->appendToGroup('api', \App\Http\Middleware\CheckApiKey::class);
+        // セッションを利用する場合
+        $middleware->appendToGroup('session',
+            [
+                \Illuminate\Cookie\Middleware\EncryptCookies::class,
+                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+                \Illuminate\Session\Middleware\StartSession::class,
+                \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -49,10 +49,13 @@ Route::get('/', function () {
 # Route::resource('products',ProductController::class );
 Route::apiResource('products', ProductController::class);
 
-// ログイン認証
+// ログイン認証（トークン）
 Route::post('/login', [LoginController::class, 'login'])->name('login');
-// ログイン認証（セッションを含む）
-// Route::post('/login', [LoginController::class, 'login_with_session'])->name('login');
+
+// ログイン認証（セッションを使う場合）
+Route::post('/login-with-session', [LoginController::class, 'login_with_session'])
+    ->middleware('session')
+    ->name('login.session');
 
 
 
