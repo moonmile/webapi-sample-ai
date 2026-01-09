@@ -8,8 +8,11 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\HelloController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Termwind\Components\Raw;
+use App\Http\Controllers\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,9 +37,46 @@ Route::get('/', function () {
 });
 
 
-// Hello World エンドポイント
-Route::get('/hello', [HelloController::class, 'index'])->name('hello.index');
 
+// Hello World エンドポイント
+# Route::get('/hello', [HelloController::class, 'index'])->name('hello.index');
+
+
+# Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+# Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+# Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+# Route::apiResource('products',ProductController::class );
+# Route::resource('products',ProductController::class );
+Route::apiResource('products', ProductController::class);
+
+// ログイン認証
+Route::post('/login', [LoginController::class, 'login'])->name('login');
+// ログイン認証（セッションを含む）
+// Route::post('/login', [LoginController::class, 'login_with_session'])->name('login');
+
+
+
+// 認証が必要な場合
+/*
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/stocks', [ProductStockController::class, 'index'])->name('stocks.index');
+    Route::get('/stocks/{product_id}', [ProductStockController::class, 'show'])->name('stocks.show');
+    // ユーザ情報
+    Route::get('/me', [AuthController::class, 'me'])->name('me');
+});
+*/
+
+// API キー認証ミドルウェアを特定のエンドポイントに適用
+/*
+Route::middleware(['api'])->group(function () {
+    Route::get('/stocks', [ProductStockController::class, 'index'])->name('stocks.index');
+    Route::get('/stocks/{product_id}', [ProductStockController::class, 'show']);
+});
+*/
+
+
+
+# Route::get('/categories/{id}', [CategoryController::class, 'show'])->name('categories.show');
 /*
 
 // ========== リソース API エンドポイント ==========
@@ -100,7 +140,7 @@ Route::get('/version', function () {
 
 // ========== 認証が必要な API（本番環境用）==========
 
-Route::middleware(['auth:api'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     // 必要に応じて認証が必要なエンドポイントをここに移動
 
     // 例: 管理者のみアクセス可能な機能

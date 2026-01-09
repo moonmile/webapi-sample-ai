@@ -1,45 +1,36 @@
 openapi: 3.0.3
 info:
-  title: お寿司配膳システム API
-  description: Laravel を使ったお寿司配膳システムのREST API
+  title: Sushi Serving System API
+  description: Laravel-based REST API for the sushi serving system.
   version: 1.0.0
-  contact:
-    name: API Support
-    email: support@sushi-system.com
-
 servers:
-  - url: http://localhost:3000/api
-    description: 開発環境
-  - url: https://api.sushi-system.com/api
-    description: 本番環境
+  - url: http://localhost:8000/api
+    description: Local development
 
 tags:
   - name: seats
-    description: テーブル席管理
+    description: Table seats
   - name: orders
-    description: 注文管理
+    description: Orders
   - name: order-history
-    description: 注文履歴管理
+    description: Order history
   - name: products
-    description: 商品管理
+    description: Products
   - name: categories
-    description: カテゴリ管理
+    description: Categories
   - name: product-categories
-    description: 商品カテゴリ関連管理
+    description: Product-category relations
   - name: product-stock
-    description: 商品在庫管理
+    description: Product stock
 
 paths:
-  # ========== テーブル席 API ==========
   /seats:
     get:
-      tags:
-        - seats
-      summary: テーブル席一覧取得
-      description: すべてのテーブル席情報を取得
+      tags: [seats]
+      summary: List seats
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -49,13 +40,9 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Seat'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
     post:
-      tags:
-        - seats
-      summary: テーブル席作成
-      description: 新しいテーブル席を作成
+      tags: [seats]
+      summary: Create seat
       requestBody:
         required: true
         content:
@@ -64,7 +51,7 @@ paths:
               $ref: '#/components/schemas/SeatCreateRequest'
       responses:
         '201':
-          description: 作成成功
+          description: Created
           content:
             application/json:
               schema:
@@ -74,18 +61,15 @@ paths:
                     $ref: '#/components/schemas/Seat'
         '422':
           $ref: '#/components/responses/ValidationError'
-
   /seats/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
     get:
-      tags:
-        - seats
-      summary: テーブル席詳細取得
-      description: 指定されたIDのテーブル席情報を取得
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [seats]
+      summary: Get seat
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -96,12 +80,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags:
-        - seats
-      summary: テーブル席更新
-      description: 指定されたIDのテーブル席情報を更新
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [seats]
+      summary: Update seat
       requestBody:
         required: true
         content:
@@ -110,7 +90,7 @@ paths:
               $ref: '#/components/schemas/SeatUpdateRequest'
       responses:
         '200':
-          description: 更新成功
+          description: Updated
           content:
             application/json:
               schema:
@@ -123,40 +103,21 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags:
-        - seats
-      summary: テーブル席削除
-      description: 指定されたIDのテーブル席を削除
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [seats]
+      summary: Delete seat
       responses:
         '204':
-          description: 削除成功
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ========== 注文 API ==========
   /orders:
     get:
-      tags:
-        - orders
-      summary: 注文一覧取得
-      description: すべての注文情報を取得
-      parameters:
-        - name: seat_id
-          in: query
-          description: 席IDでフィルタ
-          schema:
-            type: integer
-        - name: status
-          in: query
-          description: ステータスでフィルタ
-          schema:
-            type: string
-            enum: [pending, in_progress, completed]
+      tags: [orders]
+      summary: List orders
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -166,13 +127,9 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Order'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
     post:
-      tags:
-        - orders
-      summary: 注文作成
-      description: 新しい注文を作成
+      tags: [orders]
+      summary: Create order
       requestBody:
         required: true
         content:
@@ -181,7 +138,7 @@ paths:
               $ref: '#/components/schemas/OrderCreateRequest'
       responses:
         '201':
-          description: 作成成功
+          description: Created
           content:
             application/json:
               schema:
@@ -191,18 +148,15 @@ paths:
                     $ref: '#/components/schemas/Order'
         '422':
           $ref: '#/components/responses/ValidationError'
-
   /orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
     get:
-      tags:
-        - orders
-      summary: 注文詳細取得
-      description: 指定されたIDの注文情報を取得
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [orders]
+      summary: Get order
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -213,12 +167,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags:
-        - orders
-      summary: 注文更新
-      description: 指定されたIDの注文情報を更新
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [orders]
+      summary: Update order
       requestBody:
         required: true
         content:
@@ -227,7 +177,7 @@ paths:
               $ref: '#/components/schemas/OrderUpdateRequest'
       responses:
         '200':
-          description: 更新成功
+          description: Updated
           content:
             application/json:
               schema:
@@ -240,39 +190,21 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags:
-        - orders
-      summary: 注文削除
-      description: 指定されたIDの注文を削除
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [orders]
+      summary: Delete order
       responses:
         '204':
-          description: 削除成功
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ========== 注文履歴 API ==========
   /order-history:
     get:
-      tags:
-        - order-history
-      summary: 注文履歴一覧取得
-      description: すべての注文履歴を取得
-      parameters:
-        - name: order_id
-          in: query
-          description: 注文IDでフィルタ
-          schema:
-            type: integer
-        - name: seat_id
-          in: query
-          description: 席IDでフィルタ
-          schema:
-            type: integer
+      tags: [order-history]
+      summary: List order history
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -282,43 +214,15 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/OrderHistory'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
-    post:
-      tags:
-        - order-history
-      summary: 注文履歴作成
-      description: 新しい注文履歴を作成
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrderHistoryCreateRequest'
-      responses:
-        '201':
-          description: 作成成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/OrderHistory'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-
   /order-history/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
     get:
-      tags:
-        - order-history
-      summary: 注文履歴詳細取得
-      description: 指定されたIDの注文履歴を取得
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [order-history]
+      summary: Get order history entry
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -328,29 +232,14 @@ paths:
                     $ref: '#/components/schemas/OrderHistory'
         '404':
           $ref: '#/components/responses/NotFound'
-    delete:
-      tags:
-        - order-history
-      summary: 注文履歴削除
-      description: 指定されたIDの注文履歴を削除
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
-      responses:
-        '204':
-          description: 削除成功
-        '404':
-          $ref: '#/components/responses/NotFound'
 
-  # ========== 商品 API ==========
   /products:
     get:
-      tags:
-        - products
-      summary: 商品一覧取得
-      description: すべての商品情報を取得
+      tags: [products]
+      summary: List products
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -360,13 +249,9 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
     post:
-      tags:
-        - products
-      summary: 商品作成
-      description: 新しい商品を作成
+      tags: [products]
+      summary: Create product
       requestBody:
         required: true
         content:
@@ -375,7 +260,7 @@ paths:
               $ref: '#/components/schemas/ProductCreateRequest'
       responses:
         '201':
-          description: 作成成功
+          description: Created
           content:
             application/json:
               schema:
@@ -385,18 +270,15 @@ paths:
                     $ref: '#/components/schemas/Product'
         '422':
           $ref: '#/components/responses/ValidationError'
-
   /products/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
     get:
-      tags:
-        - products
-      summary: 商品詳細取得
-      description: 指定されたIDの商品情報を取得
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [products]
+      summary: Get product
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -407,12 +289,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags:
-        - products
-      summary: 商品更新
-      description: 指定されたIDの商品情報を更新
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [products]
+      summary: Update product
       requestBody:
         required: true
         content:
@@ -421,7 +299,7 @@ paths:
               $ref: '#/components/schemas/ProductUpdateRequest'
       responses:
         '200':
-          description: 更新成功
+          description: Updated
           content:
             application/json:
               schema:
@@ -434,28 +312,21 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags:
-        - products
-      summary: 商品削除
-      description: 指定されたIDの商品を削除
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [products]
+      summary: Delete product
       responses:
         '204':
-          description: 削除成功
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ========== カテゴリ API ==========
   /categories:
     get:
-      tags:
-        - categories
-      summary: カテゴリ一覧取得
-      description: すべてのカテゴリ情報を取得
+      tags: [categories]
+      summary: List categories
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -465,13 +336,9 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Category'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
     post:
-      tags:
-        - categories
-      summary: カテゴリ作成
-      description: 新しいカテゴリを作成
+      tags: [categories]
+      summary: Create category
       requestBody:
         required: true
         content:
@@ -480,7 +347,7 @@ paths:
               $ref: '#/components/schemas/CategoryCreateRequest'
       responses:
         '201':
-          description: 作成成功
+          description: Created
           content:
             application/json:
               schema:
@@ -490,18 +357,15 @@ paths:
                     $ref: '#/components/schemas/Category'
         '422':
           $ref: '#/components/responses/ValidationError'
-
   /categories/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
     get:
-      tags:
-        - categories
-      summary: カテゴリ詳細取得
-      description: 指定されたIDのカテゴリ情報を取得
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [categories]
+      summary: Get category
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -512,12 +376,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags:
-        - categories
-      summary: カテゴリ更新
-      description: 指定されたIDのカテゴリ情報を更新
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [categories]
+      summary: Update category
       requestBody:
         required: true
         content:
@@ -526,7 +386,7 @@ paths:
               $ref: '#/components/schemas/CategoryUpdateRequest'
       responses:
         '200':
-          description: 更新成功
+          description: Updated
           content:
             application/json:
               schema:
@@ -539,39 +399,21 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags:
-        - categories
-      summary: カテゴリ削除
-      description: 指定されたIDのカテゴリを削除
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
+      tags: [categories]
+      summary: Delete category
       responses:
         '204':
-          description: 削除成功
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ========== 商品カテゴリ API ==========
   /product-categories:
     get:
-      tags:
-        - product-categories
-      summary: 商品カテゴリ関連一覧取得
-      description: すべての商品カテゴリ関連を取得
-      parameters:
-        - name: product_id
-          in: query
-          description: 商品IDでフィルタ
-          schema:
-            type: integer
-        - name: category_id
-          in: query
-          description: カテゴリIDでフィルタ
-          schema:
-            type: integer
+      tags: [product-categories]
+      summary: List product-category relations
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -581,22 +423,18 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ProductCategory'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
     post:
-      tags:
-        - product-categories
-      summary: 商品カテゴリ関連作成
-      description: 新しい商品カテゴリ関連を作成
+      tags: [product-categories]
+      summary: Link product to category
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductCategoryCreateRequest'
+              $ref: '#/components/schemas/ProductCategory'
       responses:
         '201':
-          description: 作成成功
+          description: Created
           content:
             application/json:
               schema:
@@ -606,42 +444,34 @@ paths:
                     $ref: '#/components/schemas/ProductCategory'
         '422':
           $ref: '#/components/responses/ValidationError'
-
-  /product-categories/{product_id}/{category_id}:
+  /product-categories/{productId}/{categoryId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: integer
     delete:
-      tags:
-        - product-categories
-      summary: 商品カテゴリ関連削除
-      description: 指定された商品IDとカテゴリIDの関連を削除
-      parameters:
-        - name: product_id
-          in: path
-          required: true
-          description: 商品ID
-          schema:
-            type: integer
-        - name: category_id
-          in: path
-          required: true
-          description: カテゴリID
-          schema:
-            type: integer
+      tags: [product-categories]
+      summary: Unlink product from category
       responses:
         '204':
-          description: 削除成功
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ========== 商品在庫 API ==========
   /product-stock:
     get:
-      tags:
-        - product-stock
-      summary: 商品在庫一覧取得
-      description: すべての商品在庫情報を取得
+      tags: [product-stock]
+      summary: List product stock
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -651,22 +481,18 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ProductStock'
-                  meta:
-                    $ref: '#/components/schemas/Meta'
     post:
-      tags:
-        - product-stock
-      summary: 商品在庫作成
-      description: 新しい商品在庫を作成
+      tags: [product-stock]
+      summary: Set product stock
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductStockCreateRequest'
+              $ref: '#/components/schemas/ProductStock'
       responses:
         '201':
-          description: 作成成功
+          description: Created
           content:
             application/json:
               schema:
@@ -676,23 +502,19 @@ paths:
                     $ref: '#/components/schemas/ProductStock'
         '422':
           $ref: '#/components/responses/ValidationError'
-
-  /product-stock/{product_id}:
+  /product-stock/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: integer
     get:
-      tags:
-        - product-stock
-      summary: 商品在庫詳細取得
-      description: 指定された商品IDの在庫情報を取得
-      parameters:
-        - name: product_id
-          in: path
-          required: true
-          description: 商品ID
-          schema:
-            type: integer
+      tags: [product-stock]
+      summary: Get product stock
       responses:
         '200':
-          description: 成功
+          description: OK
           content:
             application/json:
               schema:
@@ -703,26 +525,17 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags:
-        - product-stock
-      summary: 商品在庫更新
-      description: 指定された商品IDの在庫情報を更新
-      parameters:
-        - name: product_id
-          in: path
-          required: true
-          description: 商品ID
-          schema:
-            type: integer
+      tags: [product-stock]
+      summary: Update product stock
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductStockUpdateRequest'
+              $ref: '#/components/schemas/ProductStock'
       responses:
         '200':
-          description: 更新成功
+          description: Updated
           content:
             application/json:
               schema:
@@ -735,20 +548,11 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags:
-        - product-stock
-      summary: 商品在庫削除
-      description: 指定された商品IDの在庫を削除
-      parameters:
-        - name: product_id
-          in: path
-          required: true
-          description: 商品ID
-          schema:
-            type: integer
+      tags: [product-stock]
+      summary: Delete product stock entry
       responses:
         '204':
-          description: 削除成功
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -758,459 +562,228 @@ components:
       name: id
       in: path
       required: true
-      description: リソースID
       schema:
         type: integer
-        format: int64
-
+  responses:
+    NotFound:
+      description: Resource not found
+    ValidationError:
+      description: Validation error
   schemas:
-    # ========== テーブル席 スキーマ ==========
     Seat:
       type: object
       properties:
         id:
           type: integer
-          format: int64
-          description: 席ID
         table_number:
           type: integer
-          description: テーブル番号
         status:
           type: string
           enum: [available, occupied]
-          description: 席の状態
         created_at:
           type: string
           format: date-time
-          description: 作成日時
         updated_at:
           type: string
           format: date-time
-          description: 更新日時
-
     SeatCreateRequest:
       type: object
-      required:
-        - table_number
+      required: [table_number]
       properties:
         table_number:
           type: integer
-          description: テーブル番号
         status:
           type: string
           enum: [available, occupied]
-          default: available
-          description: 席の状態
-
     SeatUpdateRequest:
       type: object
       properties:
         table_number:
           type: integer
-          description: テーブル番号
         status:
           type: string
           enum: [available, occupied]
-          description: 席の状態
 
-    # ========== 注文 スキーマ ==========
     Order:
       type: object
       properties:
         id:
           type: integer
-          format: int64
-          description: 注文ID
         seat_id:
           type: integer
-          description: 席ID
         sushi_type:
           type: string
           maxLength: 100
-          description: 寿司の種類
         quantity:
           type: integer
-          minimum: 1
-          description: 数量
         status:
           type: string
           enum: [pending, in_progress, completed]
-          description: 注文状態
         created_at:
           type: string
           format: date-time
-          description: 作成日時
         updated_at:
           type: string
           format: date-time
-          description: 更新日時
-
     OrderCreateRequest:
       type: object
-      required:
-        - seat_id
-        - sushi_type
-        - quantity
+      required: [seat_id, sushi_type, quantity]
       properties:
         seat_id:
           type: integer
-          description: 席ID
         sushi_type:
           type: string
           maxLength: 100
-          description: 寿司の種類
         quantity:
           type: integer
-          minimum: 1
-          description: 数量
         status:
           type: string
           enum: [pending, in_progress, completed]
-          default: pending
-          description: 注文状態
-
     OrderUpdateRequest:
       type: object
       properties:
         seat_id:
           type: integer
-          description: 席ID
         sushi_type:
           type: string
           maxLength: 100
-          description: 寿司の種類
         quantity:
           type: integer
-          minimum: 1
-          description: 数量
         status:
           type: string
           enum: [pending, in_progress, completed]
-          description: 注文状態
 
-    # ========== 注文履歴 スキーマ ==========
     OrderHistory:
       type: object
       properties:
         id:
           type: integer
-          format: int64
-          description: 履歴ID
         order_id:
           type: integer
-          description: 注文ID
         seat_id:
           type: integer
-          description: 席ID
         sushi_type:
           type: string
           maxLength: 100
-          description: 寿司の種類
         quantity:
           type: integer
-          description: 数量
         status:
           type: string
           enum: [pending, in_progress, completed]
-          description: 注文状態
         created_at:
           type: string
           format: date-time
-          description: 作成日時
         updated_at:
           type: string
           format: date-time
-          description: 更新日時
 
-    OrderHistoryCreateRequest:
-      type: object
-      required:
-        - order_id
-        - seat_id
-        - sushi_type
-        - quantity
-      properties:
-        order_id:
-          type: integer
-          description: 注文ID
-        seat_id:
-          type: integer
-          description: 席ID
-        sushi_type:
-          type: string
-          maxLength: 100
-          description: 寿司の種類
-        quantity:
-          type: integer
-          minimum: 1
-          description: 数量
-        status:
-          type: string
-          enum: [pending, in_progress, completed]
-          default: pending
-          description: 注文状態
-
-    # ========== 商品 スキーマ ==========
     Product:
       type: object
       properties:
         id:
           type: integer
-          format: int64
-          description: 商品ID
         name:
           type: string
           maxLength: 100
-          description: 商品名
         price:
           type: number
-          format: decimal
-          minimum: 0
-          description: 価格
+          format: double
         description:
           type: string
           nullable: true
-          description: 商品説明
         image_url:
           type: string
           maxLength: 100
           nullable: true
-          description: 画像URL
         created_at:
           type: string
           format: date-time
-          description: 作成日時
         updated_at:
           type: string
           format: date-time
-          description: 更新日時
-
     ProductCreateRequest:
       type: object
-      required:
-        - name
-        - price
+      required: [name, price]
       properties:
         name:
           type: string
           maxLength: 100
-          description: 商品名
         price:
           type: number
-          format: decimal
-          minimum: 0
-          description: 価格
+          format: double
         description:
           type: string
-          description: 商品説明
+          nullable: true
         image_url:
           type: string
           maxLength: 100
-          description: 画像URL
-
+          nullable: true
     ProductUpdateRequest:
       type: object
       properties:
         name:
           type: string
           maxLength: 100
-          description: 商品名
         price:
           type: number
-          format: decimal
-          minimum: 0
-          description: 価格
+          format: double
         description:
           type: string
-          description: 商品説明
+          nullable: true
         image_url:
           type: string
           maxLength: 100
-          description: 画像URL
+          nullable: true
 
-    # ========== カテゴリ スキーマ ==========
     Category:
       type: object
       properties:
         id:
           type: integer
-          format: int64
-          description: カテゴリID
         name:
           type: string
           maxLength: 100
-          description: カテゴリ名
         description:
           type: string
           nullable: true
-          description: カテゴリ説明
         created_at:
           type: string
           format: date-time
-          description: 作成日時
         updated_at:
           type: string
           format: date-time
-          description: 更新日時
-
     CategoryCreateRequest:
       type: object
-      required:
-        - name
+      required: [name]
       properties:
         name:
           type: string
           maxLength: 100
-          description: カテゴリ名
         description:
           type: string
-          description: カテゴリ説明
-
+          nullable: true
     CategoryUpdateRequest:
       type: object
       properties:
         name:
           type: string
           maxLength: 100
-          description: カテゴリ名
         description:
           type: string
-          description: カテゴリ説明
+          nullable: true
 
-    # ========== 商品カテゴリ スキーマ ==========
     ProductCategory:
       type: object
       properties:
         product_id:
           type: integer
-          description: 商品ID
         category_id:
           type: integer
-          description: カテゴリID
 
-    ProductCategoryCreateRequest:
-      type: object
-      required:
-        - product_id
-        - category_id
-      properties:
-        product_id:
-          type: integer
-          description: 商品ID
-        category_id:
-          type: integer
-          description: カテゴリID
-
-    # ========== 商品在庫 スキーマ ==========
     ProductStock:
       type: object
       properties:
         product_id:
           type: integer
-          description: 商品ID
         quantity:
           type: integer
-          minimum: 0
-          description: 在庫数
-
-    ProductStockCreateRequest:
-      type: object
-      required:
-        - product_id
-        - quantity
-      properties:
-        product_id:
-          type: integer
-          description: 商品ID
-        quantity:
-          type: integer
-          minimum: 0
-          description: 在庫数
-
-    ProductStockUpdateRequest:
-      type: object
-      required:
-        - quantity
-      properties:
-        quantity:
-          type: integer
-          minimum: 0
-          description: 在庫数
-
-    # ========== 共通スキーマ ==========
-    Meta:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: 総件数
-        per_page:
-          type: integer
-          description: 1ページあたりの件数
-        current_page:
-          type: integer
-          description: 現在のページ
-        last_page:
-          type: integer
-          description: 最終ページ
-
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-          description: エラーメッセージ
-        errors:
-          type: object
-          description: バリデーションエラー詳細
-
-  responses:
-    NotFound:
-      description: リソースが見つかりません
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: "指定されたリソースが見つかりません"
-
-    ValidationError:
-      description: バリデーションエラー
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: "バリデーションエラーが発生しました"
-            errors:
-              name:
-                - "名前は必須です"
-              price:
-                - "価格は0以上である必要があります"
-
-    Unauthorized:
-      description: 認証エラー
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: "認証が必要です"
-
-    Forbidden:
-      description: 権限エラー
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: "この操作を実行する権限がありません"
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-security:
-  - bearerAuth: []

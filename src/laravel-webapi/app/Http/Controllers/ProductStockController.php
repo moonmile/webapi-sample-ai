@@ -14,7 +14,7 @@ class ProductStockController extends Controller
      */
     public function index(): JsonResponse
     {
-        $productStock = ProductStock::paginate(15);
+        $productStock = ProductStock::with('product')->paginate(15);
 
         return response()->json([
             'data' => $productStock->items(),
@@ -51,7 +51,8 @@ class ProductStockController extends Controller
      */
     public function show(int $productId): JsonResponse
     {
-        $productStock = ProductStock::where('product_id', $productId)->firstOrFail();
+        $productStock = ProductStock::with('product')
+            ->where('product_id', $productId)->firstOrFail();
 
         return response()->json([
             'data' => $productStock

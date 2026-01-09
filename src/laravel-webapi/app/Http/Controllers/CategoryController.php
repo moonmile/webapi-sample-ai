@@ -52,7 +52,7 @@ class CategoryController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $category = Category::findOrFail($id);
+        $category = Category::with('products')->find($id);
 
         return response()->json([
             'data' => $category

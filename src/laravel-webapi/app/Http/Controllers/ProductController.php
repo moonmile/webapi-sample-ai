@@ -16,8 +16,12 @@ class ProductController extends Controller
     {
         $products = Product::paginate(15);
 
+
+        # $items = Product::with('categories')->get();
+        $items = Product::with('category')->get();
+
         return response()->json([
-            'data' => $products->items(),
+            'data' => $items, // $products->items(),
             'meta' => [
                 'total' => $products->total(),
                 'per_page' => $products->perPage(),

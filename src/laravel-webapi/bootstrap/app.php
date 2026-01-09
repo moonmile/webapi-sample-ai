@@ -13,8 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-    // CORS を API グループに適用
-    $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
+        // CORS を API グループに適用
+        $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
+        // API キー認証ミドルウェアを API グループに適用
+        // $middleware->appendToGroup('api', \App\Http\Middleware\CheckApiKey::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
