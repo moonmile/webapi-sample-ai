@@ -78,6 +78,14 @@ Route::middleware(['api'])->group(function () {
 */
 
 
+Route::middleware('csrf')->group(function () {
+    // 在庫情報は CSRF トークン検証ミドルウェアを適用
+    Route::put('/stocks/{product_id}', [ProductStockController::class, 'update'])->name('stocks.update');
+});
+// シート情報あたりで試す
+Route::put('seats/{id}', [SeatController::class, 'update'])->name('seats.update');
+
+
 
 # Route::get('/categories/{id}', [CategoryController::class, 'show'])->name('categories.show');
 /*

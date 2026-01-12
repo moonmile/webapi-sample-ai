@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -55,10 +56,29 @@ class ProductController extends Controller
      * 商品詳細取得
      * GET /api/products/{id}
      */
-    public function show(int $id): JsonResponse
+    public function show1(int $id): JsonResponse
     {
         $product = Product::findOrFail($id);
-
+        return response()->json([
+            'data' => $product
+        ]);
+    }
+    /**
+     * 商品詳細取得（例外処理あり）
+     * GET /api/products/{id}
+     */
+    public function show(int $id): JsonResponse
+    {
+        Log::debug("Entering ProductController@show with ID: {$id}");
+        try {
+            $product = Product::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Product not found with ID: {$id}");
+            return response()->json([
+                'error' => 'Product not found',
+                'data' => new \stdClass()  // 空のオブジェクトを返す
+            ], 404);
+        }
         return response()->json([
             'data' => $product
         ]);
