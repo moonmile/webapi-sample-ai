@@ -17,7 +17,7 @@ CREATE TABLE seats (
 CREATE TABLE orders (
     id INT AUTO_INCREMENT,
     seat_id INT NOT NULL,
-    sushi_type VARCHAR(100) NOT NULL,
+    product_id INT NOT NULL,
     quantity INT NOT NULL,
     status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -32,7 +32,7 @@ CREATE TABLE order_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
     seat_id INT NOT NULL,
-    sushi_type VARCHAR(100) NOT NULL,
+    product_id INT NOT NULL,
     quantity INT NOT NULL,
     status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

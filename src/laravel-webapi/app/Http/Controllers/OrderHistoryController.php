@@ -48,7 +48,7 @@ class OrderHistoryController extends Controller
         $validated = $request->validate([
             'order_id' => 'required|integer|exists:orders,id',
             'seat_id' => 'required|integer|exists:seats,id',
-            'sushi_type' => 'required|string|max:100',
+            'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'status' => ['nullable', Rule::in(['pending', 'in_progress', 'completed'])]
         ]);

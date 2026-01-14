@@ -21,7 +21,7 @@ class Order extends Model
      */
     protected $fillable = [
         'seat_id',
-        'sushi_type',
+        'product_id',
         'quantity',
         'status'
     ];
@@ -31,7 +31,7 @@ class Order extends Model
      */
     protected $casts = [
         'seat_id' => 'integer',
-        'sushi_type' => 'string',
+        'product_id' => 'integer',
         'quantity' => 'integer',
         'status' => 'string',
         'created_at' => 'datetime',
@@ -51,6 +51,13 @@ class Order extends Model
     public function seat(): BelongsTo
     {
         return $this->belongsTo(Seat::class, 'seat_id');
+    }
+    /**
+     * 注文が属する商品
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     /**

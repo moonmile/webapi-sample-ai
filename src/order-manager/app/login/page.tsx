@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api';
+const AUTH_TOKEN_KEY = 'authToken';
+const AUTH_USER_KEY = 'authUser';
+
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,27 +20,30 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // 実際のAPIを呼び出す場合
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ username, password }),
-      // });
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // デモ用の簡単なログイン検証
-      if (username === 'admin' && password === 'password') {
-        // ログイン成功時の処理
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('user', JSON.stringify({ username, role: 'kitchen' }));
-        router.push('/orders');
-      } else {
-        setError('ユーザー名またはパスワードが正しくありません。');
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.token) {
+        throw new Error(data?.error ?? data?.message ?? 'ログインに失敗しました。');
       }
+
+      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+      localStorage.setItem(
+        AUTH_USER_KEY,
+        JSON.stringify({ email, tokenType: data.token_type ?? 'Bearer' })
+      );
+      router.push('/orders');
     } catch (error) {
       console.error('ログインエラー:', error);
-      setError('ログインに失敗しました。もう一度お試しください。');
+      setError(error instanceof Error ? error.message : 'ログインに失敗しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);
     }
@@ -52,16 +59,16 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              ユーザー名
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              メールアドレス
             </label>
             <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="ユーザー名を入力してください"
+              placeholder="メールアドレスを入力してください"
               required
             />
           </div>
@@ -98,7 +105,7 @@ export default function LoginPage() {
 
         <div className="mt-6 p-4 bg-blue-50 rounded-md">
           <h3 className="text-sm font-medium text-blue-800 mb-2">デモ用ログイン情報:</h3>
-          <p className="text-sm text-blue-700">ユーザー名: admin</p>
+          <p className="text-sm text-blue-700">メールアドレス: test@example.com</p>
           <p className="text-sm text-blue-700">パスワード: password</p>
         </div>
       </div>

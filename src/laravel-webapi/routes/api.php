@@ -39,7 +39,7 @@ Route::get('/', function () {
 
 
 // Hello World エンドポイント
-# Route::get('/hello', [HelloController::class, 'index'])->name('hello.index');
+Route::get('/hello', [HelloController::class, 'index'])->name('hello.index');
 
 
 # Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -49,14 +49,40 @@ Route::get('/', function () {
 # Route::resource('products',ProductController::class );
 Route::apiResource('products', ProductController::class);
 
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
 // ログイン認証（トークン）
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// 認証が必要な注文API
+Route::middleware('auth:sanctum')->group(function () {
+    // Bearer トークン認証を適用するAPI
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.update');
+    Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+});
+
+// 注文の新規作成だけは認証が必要ない
+// API KEY で制限する
+Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+
+
+
 
 // ログイン認証（セッションを使う場合）
+/*
 Route::post('/login-with-session', [LoginController::class, 'login_with_session'])
     ->middleware('session')
     ->name('login.session');
 
+Route::middleware('auth:sanctum')->group(function () {
+    // Sanctum保護を適用するAPI
+    Route::apiResource('orders', OrderController::class);
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+});
+*/
 
 
 // 認証が必要な場合
@@ -77,14 +103,14 @@ Route::middleware(['api'])->group(function () {
 });
 */
 
-
+/*
 Route::middleware('csrf')->group(function () {
     // 在庫情報は CSRF トークン検証ミドルウェアを適用
     Route::put('/stocks/{product_id}', [ProductStockController::class, 'update'])->name('stocks.update');
 });
 // シート情報あたりで試す
 Route::put('seats/{id}', [SeatController::class, 'update'])->name('seats.update');
-
+*/
 
 
 # Route::get('/categories/{id}', [CategoryController::class, 'show'])->name('categories.show');

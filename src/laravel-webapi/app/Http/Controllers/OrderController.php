@@ -15,21 +15,10 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Order::query();
-
-        // フィルタリング
-        if ($request->has('seat_id')) {
-            $query->where('seat_id', $request->seat_id);
-        }
-
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $orders = $query->paginate(15);
-
+        $orders = Order::paginate(15);
+        $items = Order::with('product')->get();
         return response()->json([
-            'data' => $orders->items(),
+            'data' => $items,
             'meta' => [
                 'total' => $orders->total(),
                 'per_page' => $orders->perPage(),
@@ -47,7 +36,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'seat_id' => 'required|integer|exists:seats,id',
-            'sushi_type' => 'required|string|max:100',
+            'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'status' => ['nullable', Rule::in(['pending', 'in_progress', 'completed'])]
         ]);
@@ -82,7 +71,7 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'seat_id' => 'sometimes|integer|exists:seats,id',
-            'sushi_type' => 'sometimes|string|max:100',
+            'product_id' => 'sometimes|integer|exists:products,id',
             'quantity' => 'sometimes|integer|min:1',
             'status' => ['sometimes', Rule::in(['pending', 'in_progress', 'completed'])]
         ]);

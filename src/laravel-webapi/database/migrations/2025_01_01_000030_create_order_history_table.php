@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('order_id');
             $table->integer('seat_id');
-            $table->string('sushi_type', 100);
+            $table->integer('product_id');
             $table->integer('quantity');
             $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
             $table->timestamps();
@@ -23,6 +23,7 @@ return new class extends Migration
             // インデックス
             $table->index('order_id', 'idx_order_id');
             $table->index('seat_id', 'idx_seat_id');
+            $table->index('product_id', 'idx_product_id');
         });
     }
 

@@ -21,7 +21,7 @@ class OrderHistory extends Model
     protected $fillable = [
         'order_id',
         'seat_id',
-        'sushi_type',
+        'product_id',
         'quantity',
         'status'
     ];
@@ -32,7 +32,7 @@ class OrderHistory extends Model
     protected $casts = [
         'order_id' => 'integer',
         'seat_id' => 'integer',
-        'sushi_type' => 'string',
+        'product_id' => 'integer',
         'quantity' => 'integer',
         'status' => 'string',
         'created_at' => 'datetime',
@@ -87,7 +87,7 @@ class OrderHistory extends Model
     {
         return Order::create([
             'seat_id' => $this->seat_id,
-            'sushi_type' => $this->sushi_type,
+            'product_id' => $this->product_id,
             'quantity' => $this->quantity,
             'status' => 'pending'
         ]);

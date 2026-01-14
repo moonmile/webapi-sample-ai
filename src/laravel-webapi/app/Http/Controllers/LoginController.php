@@ -49,4 +49,15 @@ class LoginController extends Controller
         // 認証失敗
         return response()->json(['error' => 'Unauthorized'], 401);
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $token = $request->user()?->currentAccessToken();
+
+        if ($token) {
+            $token->delete();
+        }
+
+        return response()->noContent();
+    }
 }

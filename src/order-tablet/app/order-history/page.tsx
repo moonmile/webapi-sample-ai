@@ -7,7 +7,7 @@ interface OrderHistoryItem {
   id: number;
   order_id: number;
   seat_id: number;
-  sushi_type: string;
+  product_id: number;
   quantity: number;
   status: 'pending' | 'in_progress' | 'completed';
   created_at: string;

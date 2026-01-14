@@ -1,164 +1,173 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface OrderItem {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api';
+const AUTH_TOKEN_KEY = 'authToken';
+
+type OrderStatus = 'pending' | 'in_progress' | 'completed';
+
+interface ApiOrder {
+  product: any;
   id: number;
-  name: string;
-  price: number;
+  seat_id: number;
+  product_id: number;
   quantity: number;
+  status: OrderStatus;
+  created_at: string;
+  updated_at: string;
 }
 
-interface Order {
-  id: number;
-  tableNumber: string;
-  customerName?: string;
-  items: OrderItem[];
-  totalAmount: number;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered';
-  orderTime: string;
-  notes?: string;
+interface OrdersResponse {
+  data: ApiOrder[];
+  meta?: {
+    total?: number;
+    per_page?: number;
+    current_page?: number;
+    last_page?: number;
+  };
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<ApiOrder[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<ApiOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  // デモ用のダミーデータ
-  const dummyOrders: Order[] = [
-    {
-      id: 1001,
-      tableNumber: 'T-001',
-      customerName: '田中様',
-      items: [
-        { id: 1, name: 'まぐろ', price: 150, quantity: 2 },
-        { id: 2, name: 'サーモン', price: 120, quantity: 1 },
-        { id: 7, name: 'かっぱ巻き', price: 120, quantity: 1 }
-      ],
-      totalAmount: 540,
-      status: 'pending',
-      orderTime: '2025-09-09 12:30:00',
-      notes: '生魚アレルギーなし'
-    },
-    {
-      id: 1002,
-      tableNumber: 'T-003',
-      items: [
-        { id: 18, name: '大トロ', price: 380, quantity: 1 },
-        { id: 19, name: '中トロ', price: 280, quantity: 2 },
-        { id: 11, name: 'いくら軍艦', price: 200, quantity: 1 }
-      ],
-      totalAmount: 1140,
-      status: 'preparing',
-      orderTime: '2025-09-09 12:45:00'
-    },
-    {
-      id: 1003,
-      tableNumber: 'T-005',
-      customerName: '佐藤様',
-      items: [
-        { id: 15, name: '特上海鮮丼', price: 890, quantity: 1 },
-        { id: 29, name: '緑茶', price: 80, quantity: 2 }
-      ],
-      totalAmount: 1050,
-      status: 'ready',
-      orderTime: '2025-09-09 13:00:00'
-    },
-    {
-      id: 1004,
-      tableNumber: 'T-002',
-      items: [
-        { id: 4, name: 'たまご', price: 80, quantity: 3 },
-        { id: 6, name: 'いか', price: 110, quantity: 2 },
-        { id: 25, name: 'あら汁', price: 150, quantity: 1 }
-      ],
-      totalAmount: 560,
-      status: 'pending',
-      orderTime: '2025-09-09 13:15:00',
-      notes: 'お子様向け'
+  const handleUnauthorized = useCallback(() => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    router.push('/login');
+  }, [router]);
+
+  const fetchOrders = useCallback(async (token: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('注文の取得に失敗しました。');
+      }
+
+      const data: OrdersResponse = await response.json();
+      setOrders(data.data ?? []);
+      setSelectedOrder((prev) => {
+        if (!prev) return null;
+        return data.data?.find((order) => order.id === prev.id) ?? null;
+      });
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : '注文の取得に失敗しました。');
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [handleUnauthorized]);
 
   useEffect(() => {
-    // 認証チェック
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
       router.push('/login');
       return;
     }
 
-    fetchOrders();
-  }, [router]);
+    void fetchOrders(token);
+  }, [router, fetchOrders]);
 
-  const fetchOrders = async () => {
-    try {
-      // 実際のAPIを呼び出す場合
-      // const response = await fetch('/api/orders');
-      // const data = await response.json();
-      // setOrders(data.orders);
-      
-      // デモ用：ダミーデータを使用
-      setOrders(dummyOrders);
-      setLoading(false);
-    } catch (error) {
-      console.error('注文の取得に失敗しました:', error);
-      setOrders(dummyOrders); // フォールバックとしてダミーデータを使用
-      setLoading(false);
+  const updateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      handleUnauthorized();
+      return;
     }
-  };
 
-  const updateOrderStatus = async (orderId: number, newStatus: Order['status']) => {
     try {
-      // 実際のAPIを呼び出す場合
-      // const response = await fetch(`/api/orders/${orderId}`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ status: newStatus }),
-      // });
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-      // デモ用：ローカル状態を更新
-      const updatedOrders = orders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      );
-      setOrders(updatedOrders);
-
-      // 選択中の注文も更新
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
       }
-    } catch (error) {
-      console.error('注文ステータスの更新に失敗しました:', error);
+
+      if (!response.ok) {
+        throw new Error('注文ステータスの更新に失敗しました。');
+      }
+
+      fetchOrders(token);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : '注文ステータスの更新に失敗しました。');
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
-    router.push('/login');
+  const logout = async () => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (token) {
+      try {
+        await fetch(`${API_BASE_URL}/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    handleUnauthorized();
   };
 
-  const getStatusColor = (status: Order['status']) => {
+  const formatDateTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString('ja-JP');
+  };
+
+  const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'preparing': return 'bg-blue-100 text-blue-800';
-      case 'ready': return 'bg-green-100 text-green-800';
-      case 'delivered': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusText = (status: Order['status']) => {
+  const getStatusText = (status: OrderStatus) => {
     switch (status) {
-      case 'pending': return '注文受付';
-      case 'preparing': return '調理中';
-      case 'ready': return '配送準備完了';
-      case 'delivered': return '配送済み';
-      default: return '不明';
+      case 'pending':
+        return '注文受付';
+      case 'in_progress':
+        return '調理中';
+      case 'completed':
+        return '提供済み';
+      default:
+        return '不明';
     }
   };
 
@@ -188,6 +197,12 @@ export default function OrdersPage() {
         </div>
       </header>
 
+      {error && (
+        <div className="mx-4 mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-2 rounded">
+          {error}
+        </div>
+      )}
+
       <div className="flex h-screen">
         {/* 注文一覧 */}
         <div className="w-1/2 bg-white border-r border-gray-200 overflow-y-auto">
@@ -195,7 +210,7 @@ export default function OrdersPage() {
             <h2 className="text-xl font-bold text-gray-800">注文一覧</h2>
             <p className="text-gray-600">クリックして詳細を表示</p>
           </div>
-          
+
           <div className="space-y-2 p-4">
             {orders.map((order) => (
               <div
@@ -210,23 +225,16 @@ export default function OrdersPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold text-lg">注文 #{order.id}</h3>
-                    <p className="text-gray-600">{order.tableNumber}</p>
-                    {order.customerName && (
-                      <p className="text-gray-600">{order.customerName}</p>
-                    )}
-                    <p className="text-sm text-gray-500">{order.orderTime}</p>
+                    <p className="text-gray-600">席ID: {order.seat_id}</p>
+                    <p className="text-gray-600">商品名: {order.product.name}</p>
+                    <p className="text-sm text-gray-500">数量: {order.quantity}</p>
+                    <p className="text-sm text-gray-500">注文時間: {formatDateTime(order.created_at)}</p>
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                       {getStatusText(order.status)}
                     </span>
-                    <p className="text-lg font-bold text-gray-800 mt-1">¥{order.totalAmount}</p>
                   </div>
-                </div>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600">
-                    {order.items.length}品目 • 合計¥{order.totalAmount}
-                  </p>
                 </div>
               </div>
             ))}
@@ -241,81 +249,41 @@ export default function OrdersPage() {
                 <h2 className="text-2xl font-bold text-gray-800">注文詳細</h2>
                 <div className="mt-2 flex items-center space-x-4">
                   <span className="text-gray-600">注文 #{selectedOrder.id}</span>
-                  <span className="text-gray-600">{selectedOrder.tableNumber}</span>
-                  {selectedOrder.customerName && (
-                    <span className="text-gray-600">{selectedOrder.customerName}</span>
-                  )}
+                  <span className="text-gray-600">席ID: {selectedOrder.seat_id}</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{selectedOrder.orderTime}</p>
+                <p className="text-sm text-gray-500 mt-1">注文時間: {formatDateTime(selectedOrder.created_at)}</p>
               </div>
 
-              {/* 注文アイテム */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">注文内容</h3>
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-800">{item.name}</h4>
-                        <p className="text-sm text-gray-600">単価: ¥{item.price}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-800">×{item.quantity}</p>
-                        <p className="text-sm text-gray-600">¥{item.price * item.quantity}</p>
-                      </div>
-                    </div>
-                  ))}
+                <h3 className="text-lg font-bold text-gray-800 mb-2">注文内容</h3>
+                <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-gray-700">商品ID: {selectedOrder.product_id}</p>
+                  <p className="text-gray-700">数量: {selectedOrder.quantity}</p>
+                  <p className="text-gray-700">ステータス: {getStatusText(selectedOrder.status)}</p>
                 </div>
               </div>
 
-              {/* 注文メモ */}
-              {selectedOrder.notes && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-bold text-gray-800 mb-2">メモ</h3>
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-gray-700">{selectedOrder.notes}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* 合計金額 */}
-              <div className="mb-6 p-4 bg-gray-100 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-800">合計金額</span>
-                  <span className="text-2xl font-bold text-red-600">¥{selectedOrder.totalAmount}</span>
-                </div>
-              </div>
-
-              {/* ステータス更新ボタン */}
               <div className="space-y-3">
                 <h3 className="text-lg font-bold text-gray-800">ステータス更新</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedOrder.status === 'pending' && (
                     <button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'preparing')}
+                      onClick={() => updateOrderStatus(selectedOrder.id, 'in_progress')}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                     >
                       調理開始
                     </button>
                   )}
-                  {selectedOrder.status === 'preparing' && (
+                  {selectedOrder.status === 'in_progress' && (
                     <button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'ready')}
+                      onClick={() => updateOrderStatus(selectedOrder.id, 'completed')}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                     >
-                      調理完了・配送準備
+                      完了
                     </button>
                   )}
-                  {selectedOrder.status === 'ready' && (
-                    <button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'delivered')}
-                      className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-                    >
-                      配送完了
-                    </button>
-                  )}
-                  {selectedOrder.status === 'delivered' && (
-                    <div className="text-green-600 font-semibold">✅ 配送完了済み</div>
+                  {selectedOrder.status === 'completed' && (
+                    <div className="text-green-600 font-semibold">✅ 完了済み</div>
                   )}
                 </div>
                 <div className="mt-2">
