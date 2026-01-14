@@ -43,8 +43,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 VerifyCsrfToken::class,
         ]);
 
-
-
+        // 独自 API トークン認証ミドルウェアを API グループに適用
+        $middleware->appendToGroup('myapi', \App\Http\Middleware\MyApiTokenMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
