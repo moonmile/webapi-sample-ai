@@ -211,6 +211,15 @@ paths:
         - orders
       summary: 注文作成
       description: 新しい注文を作成
+      security:
+        - orderApiKey: []
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          description: 注文受付専用のAPIキー
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -1273,6 +1282,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    orderApiKey:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: 注文作成時に必要な専用APIキー
 
 security:
   - bearerAuth: []

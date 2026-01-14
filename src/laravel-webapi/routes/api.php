@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Termwind\Components\Raw;
 use App\Http\Controllers\LoginController;
+use App\Http\Middleware\EnsureOrderApiKey;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,8 +50,6 @@ Route::get('/hello', [HelloController::class, 'index'])->name('hello.index');
 # Route::resource('products',ProductController::class );
 Route::apiResource('products', ProductController::class);
 
-Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-
 // ログイン認証（トークン）
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -66,7 +65,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // 注文の新規作成だけは認証が必要ない
 // API KEY で制限する
-Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+Route::post('/orders', [OrderController::class, 'store'])
+    ->middleware(EnsureOrderApiKey::class)
+    ->name('orders.store');
 
 
 

@@ -37,4 +37,9 @@ return [
     'api' => [
         'key' => env('API_KEY'),
     ],
+
+    'orders' => [
+        'api_key' => env('ORDERS_API_KEY'),
+        'api_key_header' => env('ORDERS_API_KEY_HEADER', 'X-API-KEY'),
+    ],
 ];
