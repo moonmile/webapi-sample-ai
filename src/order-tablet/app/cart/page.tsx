@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { submitOrderItem } from '../lib/api';
 
 interface CartItem {
   id: number;
@@ -10,21 +11,36 @@ interface CartItem {
   quantity: number;
 }
 
+const DEFAULT_SEAT_ID = 1;
+const SEAT_STORAGE_KEY = 'seat_id';
+
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [guests, setGuests] = useState(1);
+  const [seatId, setSeatId] = useState<number>(DEFAULT_SEAT_ID);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     // カートの内容とゲスト数を復元
     const savedCart = localStorage.getItem('cart');
     const savedGuests = sessionStorage.getItem('guests');
+    const savedSeat = sessionStorage.getItem(SEAT_STORAGE_KEY);
     
     if (savedCart) {
       setCart(JSON.parse(savedCart));
     }
     if (savedGuests) {
       setGuests(parseInt(savedGuests));
+    }
+    if (savedSeat) {
+      const parsedSeat = Number(savedSeat);
+      if (!Number.isNaN(parsedSeat)) {
+        setSeatId(parsedSeat);
+      }
+    } else {
+      sessionStorage.setItem(SEAT_STORAGE_KEY, DEFAULT_SEAT_ID.toString());
     }
   }, []);
 
@@ -61,26 +77,43 @@ export default function CartPage() {
       return;
     }
 
+    if (isSubmitting) {
+      return;
+    }
+
+    setSubmitError('');
+    setIsSubmitting(true);
+
     try {
-      // 注文をAPIに送信（実装例）
+      for (const item of cart) {
+        await submitOrderItem({
+          seatId,
+          productId: item.id,
+          quantity: item.quantity,
+        });
+      }
+
       const orderData = {
-        seat_id: 1, // テーブル番号 T-001 = seat_id 1
+        seat_id: seatId,
         items: cart,
         total_amount: getTotalPrice(),
-        guest_count: guests
+        guest_count: guests,
       };
 
-      console.log('注文データ:', orderData);
-      
-      // 注文完了画面に遷移
       localStorage.setItem('orderData', JSON.stringify(orderData));
       localStorage.removeItem('cart');
+      setCart([]);
       router.push('/order-complete');
-      
     } catch (error) {
       console.error('注文に失敗しました:', error);
-      alert('注文の送信に失敗しました。もう一度お試しください。');
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : '注文の送信に失敗しました。もう一度お試しください。'
+      );
     }
+
+    setIsSubmitting(false);
   };
 
   const goBack = () => {
@@ -100,7 +133,7 @@ export default function CartPage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold">🛒 カート</h1>
-            <p className="text-red-100">テーブル: T-001 ({guests}名様)</p>
+            <p className="text-red-100">テーブル: T-{String(seatId).padStart(3, '0')} ({guests}名様)</p>
           </div>
         </div>
       </header>
@@ -180,11 +213,17 @@ export default function CartPage() {
 
             {/* 注文確定ボタン */}
             <div className="text-center">
+              {submitError && (
+                <div className="mb-4 bg-red-100 border border-red-300 text-red-800 px-4 py-2 rounded">
+                  {submitError}
+                </div>
+              )}
               <button
                 onClick={confirmOrder}
-                className="w-full max-w-md bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-xl transition-colors shadow-lg"
+                disabled={isSubmitting}
+                className="w-full max-w-md bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xl font-bold py-4 rounded-xl transition-colors shadow-lg"
               >
-                注文を確定する
+                {isSubmitting ? '送信中...' : '注文を確定する'}
               </button>
               <p className="text-gray-500 text-sm mt-4">
                 注文確定後、厨房で調理を開始いたします
