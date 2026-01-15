@@ -13,13 +13,22 @@ class ProductController extends Controller
      * 商品一覧取得
      * GET /api/products
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $products = Product::paginate(15);
-        $items = Product::with('category')->get();
+        $query = Product::with('categories')->orderByDesc('created_at');
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                    ->orWhere('description', 'like', "%{$keyword}%");
+            });
+        }
+
+        $products = $query->paginate(15);
 
         return response()->json([
-            'data' => $items, // $products->items(),
+            'data' => $products->items(),
             'meta' => [
                 'total' => $products->total(),
                 'per_page' => $products->perPage(),
@@ -39,13 +48,21 @@ class ProductController extends Controller
             'name' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'image_url' => 'nullable|string|max:100'
+            'image_url' => 'nullable|string|max:100',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'integer|exists:categories,id'
         ]);
 
+        $categoryIds = $validated['category_ids'] ?? [];
+        unset($validated['category_ids']);
+
         $product = Product::create($validated);
+        if (!empty($categoryIds)) {
+            $product->categories()->sync($categoryIds);
+        }
 
         return response()->json([
-            'data' => $product
+            'data' => $product->load('categories')
         ], 201);
     }
 
@@ -68,7 +85,7 @@ class ProductController extends Controller
     {
         Log::debug("Entering ProductController@show with ID: {$id}");
         try {
-            $product = Product::findOrFail($id);
+            $product = Product::with('categories')->findOrFail($id);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error("Product not found with ID: {$id}");
             return response()->json([
@@ -93,13 +110,22 @@ class ProductController extends Controller
             'name' => 'sometimes|string|max:100',
             'price' => 'sometimes|numeric|min:0',
             'description' => 'nullable|string',
-            'image_url' => 'nullable|string|max:100'
+            'image_url' => 'nullable|string|max:100',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'integer|exists:categories,id'
         ]);
+
+        $categoryIds = $validated['category_ids'] ?? null;
+        unset($validated['category_ids']);
 
         $product->update($validated);
 
+        if (is_array($categoryIds)) {
+            $product->categories()->sync($categoryIds);
+        }
+
         return response()->json([
-            'data' => $product->fresh()
+            'data' => $product->fresh()->load('categories')
         ]);
     }
 
@@ -110,6 +136,7 @@ class ProductController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $product = Product::findOrFail($id);
+        $product->categories()->detach();
         $product->delete();
 
         return response()->json(null, 204);

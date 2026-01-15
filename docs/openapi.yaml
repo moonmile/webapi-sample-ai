@@ -395,6 +395,12 @@ paths:
         - products
       summary: 商品一覧取得
       description: すべての商品情報を取得
+      parameters:
+        - name: keyword
+          in: query
+          description: 商品名または説明の部分一致でフィルタ
+          schema:
+            type: string
       responses:
         '200':
           description: 成功
@@ -500,6 +506,12 @@ paths:
         - categories
       summary: カテゴリ一覧取得
       description: すべてのカテゴリ情報を取得
+      parameters:
+        - name: keyword
+          in: query
+          description: カテゴリ名または説明の部分一致でフィルタ
+          schema:
+            type: string
       responses:
         '200':
           description: 成功
@@ -1018,6 +1030,11 @@ components:
           maxLength: 100
           nullable: true
           description: 画像URL
+        categories:
+          type: array
+          description: 紐づくカテゴリ一覧
+          items:
+            $ref: '#/components/schemas/Category'
         created_at:
           type: string
           format: date-time
@@ -1049,6 +1066,12 @@ components:
           type: string
           maxLength: 100
           description: 画像URL
+        category_ids:
+          type: array
+          description: 紐づけるカテゴリIDの配列
+          items:
+            type: integer
+            format: int64
 
     ProductUpdateRequest:
       type: object
@@ -1069,6 +1092,12 @@ components:
           type: string
           maxLength: 100
           description: 画像URL
+        category_ids:
+          type: array
+          description: 紐づけるカテゴリIDの配列
+          items:
+            type: integer
+            format: int64
 
     # ========== カテゴリ スキーマ ==========
     Category:
@@ -1086,6 +1115,14 @@ components:
           type: string
           nullable: true
           description: カテゴリ説明
+        products_count:
+          type: integer
+          description: 紐づく商品の数（一覧取得時のみ）
+        products:
+          type: array
+          description: 紐づく商品一覧（詳細取得時のみ）
+          items:
+            $ref: '#/components/schemas/Product'
         created_at:
           type: string
           format: date-time

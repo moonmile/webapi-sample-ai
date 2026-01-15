@@ -12,9 +12,19 @@ class CategoryController extends Controller
      * カテゴリ一覧取得
      * GET /api/categories
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $categories = Category::paginate(15);
+        $query = Category::withCount('products')->orderBy('name');
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                    ->orWhere('description', 'like', "%{$keyword}%");
+            });
+        }
+
+        $categories = $query->paginate(15);
 
         return response()->json([
             'data' => $categories->items(),
@@ -52,7 +62,7 @@ class CategoryController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $category = Category::with('products')->find($id);
+        $category = Category::with('products')->findOrFail($id);
 
         return response()->json([
             'data' => $category
