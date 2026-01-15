@@ -2,21 +2,20 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { clearStoredAuth, getLandingPath, getStoredAuth } from './lib/auth';
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // 認証状態をチェック
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    
-    if (isAuthenticated) {
-      // ログイン済みの場合は注文画面にリダイレクト
-      router.push('/orders');
-    } else {
-      // 未ログインの場合はログイン画面にリダイレクト
-      router.push('/login');
+    const auth = getStoredAuth();
+    if (auth) {
+      router.replace(getLandingPath(auth.email));
+      return;
     }
+
+    clearStoredAuth();
+    router.replace('/login');
   }, [router]);
 
   return (

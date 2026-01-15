@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { clearStoredAuth, getLandingPath, getStoredAuth, isStoreEmail } from '../lib/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api';
-const AUTH_TOKEN_KEY = 'authToken';
 
 type OrderStatus = 'pending' | 'in_progress' | 'completed';
 
@@ -42,11 +42,12 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<ApiOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
   const router = useRouter();
 
   const handleUnauthorized = useCallback(() => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    router.push('/login');
+    clearStoredAuth();
+    router.replace('/login');
   }, [router]);
 
   const fetchOrders = useCallback(async (token: string) => {
@@ -84,21 +85,29 @@ export default function OrdersPage() {
   }, [handleUnauthorized]);
 
   useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    void fetchOrders(token);
-  }, [router, fetchOrders]);
-
-  const updateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
+    const auth = getStoredAuth();
+    if (!auth) {
       handleUnauthorized();
       return;
     }
+
+    if (!isStoreEmail(auth.email)) {
+      router.replace(getLandingPath(auth.email));
+      return;
+    }
+
+    setAuthEmail(auth.email);
+    void fetchOrders(auth.token);
+  }, [router, fetchOrders, handleUnauthorized]);
+
+  const updateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
+    const auth = getStoredAuth();
+    if (!auth || !isStoreEmail(auth.email)) {
+      handleUnauthorized();
+      return;
+    }
+
+    const token = auth.token;
 
     try {
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
@@ -128,14 +137,14 @@ export default function OrdersPage() {
   };
 
   const logout = async () => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const auth = getStoredAuth();
 
-    if (token) {
+    if (auth) {
       try {
         await fetch(`${API_BASE_URL}/logout`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${auth.token}`,
             Accept: 'application/json',
           },
         });

@@ -2,9 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  clearStoredAuth,
+  getLandingPath,
+  getStoredAuth,
+  isAdminEmail,
+} from '../../lib/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api';
-const AUTH_TOKEN_KEY = 'authToken';
 
 type Category = {
   id: number;
@@ -31,16 +36,22 @@ export default function CategoryAdminPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleUnauthorized = useCallback(() => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    router.push('/login');
+    clearStoredAuth();
+    router.replace('/login');
   }, [router]);
 
   const fetchCategories = useCallback(async () => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
-      router.push('/login');
+    const auth = getStoredAuth();
+    if (!auth) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!isAdminEmail(auth.email)) {
+      router.replace(getLandingPath(auth.email));
       return;
     }
 
@@ -50,7 +61,7 @@ export default function CategoryAdminPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${auth.token}`,
           Accept: 'application/json',
         },
       });
@@ -90,8 +101,8 @@ export default function CategoryAdminPage() {
 
   const submitCategory = async (event: React.FormEvent) => {
     event.preventDefault();
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
+    const auth = getStoredAuth();
+    if (!auth || !isAdminEmail(auth.email)) {
       handleUnauthorized();
       return;
     }
@@ -115,7 +126,7 @@ export default function CategoryAdminPage() {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${auth.token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -161,8 +172,8 @@ export default function CategoryAdminPage() {
       return;
     }
 
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
+    const auth = getStoredAuth();
+    if (!auth || !isAdminEmail(auth.email)) {
       handleUnauthorized();
       return;
     }
@@ -174,7 +185,7 @@ export default function CategoryAdminPage() {
       const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${auth.token}`,
           Accept: 'application/json',
         },
       });
@@ -199,6 +210,29 @@ export default function CategoryAdminPage() {
     }
   };
 
+  const logout = useCallback(async () => {
+    setIsLoggingOut(true);
+    const auth = getStoredAuth();
+
+    if (auth) {
+      try {
+        await fetch(`${API_BASE_URL}/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            Accept: 'application/json',
+          },
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    clearStoredAuth();
+    router.replace('/login');
+    setIsLoggingOut(false);
+  }, [router]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -215,12 +249,21 @@ export default function CategoryAdminPage() {
             <p className="text-sm text-emerald-200">管理画面</p>
             <h1 className="text-2xl font-bold">カテゴリ管理</h1>
           </div>
-          <button
-            onClick={() => router.push('/admin/products')}
-            className="text-sm underline decoration-dotted underline-offset-4"
-          >
-            商品管理へ
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/admin/products')}
+              className="text-sm underline decoration-dotted underline-offset-4"
+            >
+              商品管理へ
+            </button>
+            <button
+              onClick={logout}
+              disabled={isLoggingOut}
+              className="bg-white/10 hover:bg-white/20 text-sm font-semibold px-3 py-1.5 rounded-md transition disabled:opacity-60"
+            >
+              {isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+            </button>
+          </div>
         </div>
       </header>
 

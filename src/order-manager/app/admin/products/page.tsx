@@ -2,9 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  clearStoredAuth,
+  getLandingPath,
+  getStoredAuth,
+  isAdminEmail,
+} from '../../lib/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api';
-const AUTH_TOKEN_KEY = 'authToken';
 
 type ApiCategory = {
   id: number;
@@ -66,10 +71,11 @@ export default function ProductAdminPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleUnauthorized = useCallback(() => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    router.push('/login');
+    clearStoredAuth();
+    router.replace('/login');
   }, [router]);
 
   const fetchCategories = useCallback(async (token: string) => {
@@ -119,9 +125,14 @@ export default function ProductAdminPage() {
   }, [handleUnauthorized]);
 
   const initialize = useCallback(async () => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
-      router.push('/login');
+    const auth = getStoredAuth();
+    if (!auth) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!isAdminEmail(auth.email)) {
+      router.replace(getLandingPath(auth.email));
       return;
     }
 
@@ -129,14 +140,14 @@ export default function ProductAdminPage() {
     setError('');
 
     try {
-      await Promise.all([fetchCategories(token), fetchProducts(token)]);
+      await Promise.all([fetchCategories(auth.token), fetchProducts(auth.token)]);
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'データの取得に失敗しました。');
     } finally {
       setLoading(false);
     }
-  }, [fetchCategories, fetchProducts, router]);
+  }, [fetchCategories, fetchProducts, handleUnauthorized, router]);
 
   useEffect(() => {
     void initialize();
@@ -178,11 +189,13 @@ export default function ProductAdminPage() {
 
   const submitProduct = async (event: React.FormEvent) => {
     event.preventDefault();
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
+    const auth = getStoredAuth();
+    if (!auth || !isAdminEmail(auth.email)) {
       handleUnauthorized();
       return;
     }
+
+    const token = auth.token;
 
     setSaving(true);
     setError('');
@@ -241,11 +254,13 @@ export default function ProductAdminPage() {
       return;
     }
 
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
+    const auth = getStoredAuth();
+    if (!auth || !isAdminEmail(auth.email)) {
       handleUnauthorized();
       return;
     }
+
+    const token = auth.token;
 
     setError('');
     setNotice('');
@@ -279,6 +294,29 @@ export default function ProductAdminPage() {
     }
   };
 
+  const logout = useCallback(async () => {
+    setIsLoggingOut(true);
+    const auth = getStoredAuth();
+
+    if (auth) {
+      try {
+        await fetch(`${API_BASE_URL}/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            Accept: 'application/json',
+          },
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    clearStoredAuth();
+    router.replace('/login');
+    setIsLoggingOut(false);
+  }, [router]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -295,12 +333,21 @@ export default function ProductAdminPage() {
             <p className="text-sm text-slate-300">管理画面</p>
             <h1 className="text-2xl font-bold">商品管理</h1>
           </div>
-          <button
-            onClick={() => router.push('/orders')}
-            className="text-sm underline decoration-dotted underline-offset-4"
-          >
-            注文一覧へ戻る
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/admin/categories')}
+              className="text-sm underline decoration-dotted underline-offset-4"
+            >
+              カテゴリ管理へ
+            </button>
+            <button
+              onClick={logout}
+              disabled={isLoggingOut}
+              className="bg-white/10 hover:bg-white/20 text-sm font-semibold px-3 py-1.5 rounded-md transition disabled:opacity-60"
+            >
+              {isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+            </button>
+          </div>
         </div>
       </header>
 

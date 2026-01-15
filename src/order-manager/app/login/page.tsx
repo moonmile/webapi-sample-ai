@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  AUTH_TOKEN_KEY,
+  AUTH_USER_KEY,
+  clearStoredAuth,
+  getLandingPath,
+  getStoredAuth,
+} from '../lib/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api';
-const AUTH_TOKEN_KEY = 'authToken';
-const AUTH_USER_KEY = 'authUser';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,6 +18,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    const auth = getStoredAuth();
+    if (auth) {
+      router.replace(getLandingPath(auth.email));
+    } else {
+      clearStoredAuth();
+    }
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +54,7 @@ export default function LoginPage() {
         AUTH_USER_KEY,
         JSON.stringify({ email, tokenType: data.token_type ?? 'Bearer' })
       );
-      router.push('/orders');
+      router.replace(getLandingPath(email));
     } catch (error) {
       console.error('ログインエラー:', error);
       setError(error instanceof Error ? error.message : 'ログインに失敗しました。もう一度お試しください。');
