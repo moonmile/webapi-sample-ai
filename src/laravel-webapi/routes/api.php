@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductStockController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\HelloController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
@@ -72,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/orders', [OrderController::class, 'store'])
     ->middleware(EnsureOrderApiKey::class)
     ->name('orders.store');
+
+// CSRF トークンのみで保護されたレビュー投稿 API
+Route::middleware(['api', 'csrf'])->group(function () {
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+});
 
 
 

@@ -77,4 +77,19 @@ CREATE TABLE product_stock (
     INDEX idx_product_id (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- レビュー
+CREATE TABLE reviews (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    rating TINYINT NOT NULL,
+    comment TEXT NOT NULL,
+    product_id INT NULL,
+    order_id INT NULL,
+    seat_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_reviews_product_id (product_id),
+    INDEX idx_reviews_order_id (order_id),
+    INDEX idx_reviews_seat_id (seat_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 

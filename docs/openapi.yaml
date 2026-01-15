@@ -30,6 +30,8 @@ tags:
     description: 商品カテゴリ関連管理
   - name: product-stock
     description: 商品在庫管理
+  - name: reviews
+    description: 感想・レビュー管理
 
 paths:
   # ========== 認証 API ==========
@@ -298,6 +300,33 @@ paths:
           description: 削除成功
         '404':
           $ref: '#/components/responses/NotFound'
+
+  # ========== レビュー API ==========
+  /reviews:
+    post:
+      tags:
+        - reviews
+      summary: レビュー投稿
+      description: フロントエンドからの感想やレビューを登録（CSRF トークン必須）
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+      responses:
+        '201':
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Review'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   # ========== 注文履歴 API ==========
   /order-history:
@@ -1215,6 +1244,71 @@ components:
           type: integer
           minimum: 0
           description: 在庫数
+
+    # ========== レビュー スキーマ ==========
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: レビューID
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: 評価（1〜5）
+        comment:
+          type: string
+          description: 感想・レビュー本文
+        product_id:
+          type: integer
+          nullable: true
+          description: レビュー対象の商品ID
+        order_id:
+          type: integer
+          nullable: true
+          description: レビュー対象の注文ID
+        seat_id:
+          type: integer
+          nullable: true
+          description: レビュー対象の席ID
+        created_at:
+          type: string
+          format: date-time
+          description: 作成日時
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新日時
+
+    ReviewCreateRequest:
+      type: object
+      required:
+        - rating
+        - comment
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: 評価（1〜5）
+        comment:
+          type: string
+          maxLength: 1000
+          description: 感想・レビュー本文
+        product_id:
+          type: integer
+          nullable: true
+          description: レビュー対象の商品ID
+        order_id:
+          type: integer
+          nullable: true
+          description: レビュー対象の注文ID
+        seat_id:
+          type: integer
+          nullable: true
+          description: レビュー対象の席ID
 
     LoginRequest:
       type: object
