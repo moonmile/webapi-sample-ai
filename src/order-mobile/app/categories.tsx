@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import type { StoredCartItem } from '@/app/lib/cartStorage';
+import { loadCartFromStorage, saveCartToStorage } from '@/app/lib/cartStorage';
 
 interface Category {
   id: number;
@@ -62,14 +64,21 @@ export default function CategoriesScreen() {
   });
 
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [cart, setCart] = useState<{id: number, name: string, price: number, quantity: number}[]>([]);
+  const [cart, setCart] = useState<StoredCartItem[]>([]);
 
   useEffect(() => {
-    // カートの内容を復元（実際のアプリでは AsyncStorage を使用）
-    // const savedCart = await AsyncStorage.getItem('cart');
-    // if (savedCart) {
-    //   setCart(JSON.parse(savedCart));
-    // }
+    let isMounted = true;
+
+    (async () => {
+      const storedCart = await loadCartFromStorage();
+      if (isMounted) {
+        setCart(storedCart);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const addToCart = (product: Product) => {
@@ -92,8 +101,7 @@ export default function CategoriesScreen() {
     }
     
     setCart(newCart);
-    // 実際のアプリでは AsyncStorage に保存
-    // AsyncStorage.setItem('cart', JSON.stringify(newCart));
+    void saveCartToStorage(newCart);
     
     Alert.alert('追加完了', `${product.name}をカートに追加しました`);
   };

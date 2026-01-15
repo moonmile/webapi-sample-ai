@@ -1,13 +1,51 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
+interface SummaryItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface OrderSummary {
+  seatId: number;
+  subtotal: number;
+  totalWithTax: number;
+  items: SummaryItem[];
+}
+
+const FALLBACK_ITEMS: SummaryItem[] = [
+  { id: 1, name: 'まぐろ', price: 150, quantity: 2 },
+  { id: 2, name: 'サーモン', price: 120, quantity: 1 },
+  { id: 7, name: 'かっぱ巻き', price: 120, quantity: 1 },
+];
+
 export default function OrderCompleteScreen() {
   const orderNumber = `#${Date.now().toString().slice(-6)}`;
   const estimatedTime = 15; // 15分
+  const params = useLocalSearchParams<{ summary?: string | string[] }>();
+
+  const summary = useMemo<OrderSummary | null>(() => {
+    const raw = params.summary;
+    if (!raw) return null;
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    try {
+      return JSON.parse(decodeURIComponent(value)) as OrderSummary;
+    } catch (error) {
+      console.warn('Failed to parse order summary', error);
+      return null;
+    }
+  }, [params.summary]);
+
+  const items = summary?.items ?? FALLBACK_ITEMS;
+  const subtotal = summary?.subtotal ?? items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const totalWithTax = summary?.totalWithTax ?? Math.floor(subtotal * 1.1);
+  const seatLabel = summary ? `T-${String(summary.seatId).padStart(3, '0')}` : 'T-001';
 
   const goToOrderHistory = () => {
     router.push('/order-history');
@@ -26,6 +64,7 @@ export default function OrderCompleteScreen() {
       {/* ヘッダー */}
       <ThemedView style={styles.header}>
         <ThemedText style={styles.title}>注文完了</ThemedText>
+        <ThemedText style={styles.subtitle}>{seatLabel}</ThemedText>
       </ThemedView>
 
       <ThemedView style={styles.content}>
@@ -56,25 +95,30 @@ export default function OrderCompleteScreen() {
         </ThemedView>
 
         {/* 注文内容サマリー */}
-        <ThemedView style={styles.orderSummary}>
-          <ThemedText style={styles.summaryTitle}>注文内容</ThemedText>
-          <ThemedView style={styles.summaryItem}>
-            <ThemedText style={styles.summaryText}>まぐろ × 2</ThemedText>
-            <ThemedText style={styles.summaryPrice}>¥300</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.summaryItem}>
-            <ThemedText style={styles.summaryText}>サーモン × 1</ThemedText>
-            <ThemedText style={styles.summaryPrice}>¥120</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.summaryItem}>
-            <ThemedText style={styles.summaryText}>かっぱ巻き × 1</ThemedText>
-            <ThemedText style={styles.summaryPrice}>¥120</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.divider} />
-          <ThemedView style={styles.summaryItem}>
-            <ThemedText style={styles.summaryTotal}>合計（税込）</ThemedText>
-            <ThemedText style={styles.summaryTotalPrice}>¥594</ThemedText>
-          </ThemedView>
+          <ThemedView style={styles.orderSummary}>
+            <ThemedText style={styles.summaryTitle}>注文内容</ThemedText>
+            {items.map((item) => (
+              <ThemedView key={item.id} style={styles.summaryItem}>
+                <ThemedText style={styles.summaryText}>
+                  {item.name} × {item.quantity}
+                </ThemedText>
+                <ThemedText style={styles.summaryPrice}>¥{item.price * item.quantity}</ThemedText>
+              </ThemedView>
+            ))}
+            <ThemedView style={styles.divider} />
+            <ThemedView style={styles.summaryItem}>
+              <ThemedText style={styles.summaryText}>小計</ThemedText>
+              <ThemedText style={styles.summaryPrice}>¥{subtotal}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.summaryItem}>
+              <ThemedText style={styles.summaryText}>税込</ThemedText>
+              <ThemedText style={styles.summaryPrice}>¥{totalWithTax}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.divider} />
+            <ThemedView style={styles.summaryItem}>
+              <ThemedText style={styles.summaryTotal}>合計（税込）</ThemedText>
+              <ThemedText style={styles.summaryTotalPrice}>¥{totalWithTax}</ThemedText>
+            </ThemedView>
         </ThemedView>
 
         {/* アクションボタン */}
@@ -128,6 +172,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#d1fae5',
   },
   content: {
     flex: 1,

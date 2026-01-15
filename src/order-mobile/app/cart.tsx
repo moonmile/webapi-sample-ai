@@ -1,36 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { submitOrderItem } from '@/app/lib/api';
+import type { StoredCartItem } from '@/app/lib/cartStorage';
+import { loadCartFromStorage, saveCartToStorage, clearCartStorage } from '@/app/lib/cartStorage';
 
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
+const DEFAULT_SEAT_ID = 1;
 
 export default function CartScreen() {
-  const [cart, setCart] = useState<CartItem[]>([
-    // デモ用のダミーデータ
-    { id: 1, name: 'まぐろ', price: 150, quantity: 2 },
-    { id: 2, name: 'サーモン', price: 120, quantity: 1 },
-    { id: 7, name: 'かっぱ巻き', price: 120, quantity: 1 },
-  ]);
+  const [cart, setCart] = useState<StoredCartItem[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
+
+  const persistCart = useCallback(async (nextCart: StoredCartItem[]) => {
+    setCart(nextCart);
+    try {
+      await saveCartToStorage(nextCart);
+    } catch (error) {
+      console.error('Failed to persist cart', error);
+      Alert.alert('エラー', 'カートの保存に失敗しました。時間をおいて再度お試しください。');
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      (async () => {
+        setIsLoadingCart(true);
+        const storedCart = await loadCartFromStorage();
+        if (isActive) {
+          setCart(storedCart);
+          setIsLoadingCart(false);
+        }
+      })();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   const updateQuantity = (id: number, newQuantity: number) => {
+    let updatedCart: StoredCartItem[];
+
     if (newQuantity <= 0) {
-      // 数量が0以下の場合は削除
-      const updatedCart = cart.filter(item => item.id !== id);
-      setCart(updatedCart);
+      updatedCart = cart.filter(item => item.id !== id);
     } else {
-      const updatedCart = cart.map(item =>
+      updatedCart = cart.map(item =>
         item.id === id ? { ...item, quantity: newQuantity } : item
       );
-      setCart(updatedCart);
     }
+
+    void persistCart(updatedCart);
   };
 
   const removeItem = (id: number) => {
@@ -39,20 +65,58 @@ export default function CartScreen() {
       'この商品をカートから削除しますか？',
       [
         { text: 'キャンセル', style: 'cancel' },
-        { 
-          text: '削除', 
+        {
+          text: '削除',
           style: 'destructive',
           onPress: () => {
             const updatedCart = cart.filter(item => item.id !== id);
-            setCart(updatedCart);
-          }
-        }
+            void persistCart(updatedCart);
+          },
+        },
       ]
     );
   };
 
   const getTotalAmount = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const sendOrder = async () => {
+    setIsSubmitting(true);
+
+    try {
+      for (const item of cart) {
+        await submitOrderItem({
+          seatId: DEFAULT_SEAT_ID,
+          productId: item.id,
+          quantity: item.quantity,
+        });
+      }
+
+      const subtotal = getTotalAmount();
+      const totalWithTax = Math.floor(subtotal * 1.1);
+      const summary = {
+        seatId: DEFAULT_SEAT_ID,
+        subtotal,
+        totalWithTax,
+        items: cart,
+      };
+
+      await clearCartStorage();
+      setCart([]);
+      const encodedSummary = encodeURIComponent(JSON.stringify(summary));
+      router.push(`/order-complete?summary=${encodedSummary}`);
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        '注文エラー',
+        error instanceof Error
+          ? error.message
+          : '注文の送信に失敗しました。もう一度お試しください。'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const confirmOrder = () => {
@@ -63,18 +127,15 @@ export default function CartScreen() {
 
     Alert.alert(
       '注文確認',
-      `合計 ¥${getTotalAmount()} の注文を確定しますか？`,
+      `合計 ¥${Math.floor(getTotalAmount() * 1.1)} (税込) の注文を確定しますか？`,
       [
         { text: 'キャンセル', style: 'cancel' },
-        { 
-          text: '注文確定', 
+        {
+          text: '注文確定',
           onPress: () => {
-            // 注文を送信
-            Alert.alert('注文完了', '注文が確定されました！', [
-              { text: 'OK', onPress: () => router.push('/order-complete') }
-            ]);
-          }
-        }
+            void sendOrder();
+          },
+        },
       ]
     );
   };
@@ -95,14 +156,18 @@ export default function CartScreen() {
           </ThemedView>
           <ThemedView style={styles.headerTextContainer}>
             <ThemedText style={styles.title}>🛒 カート</ThemedText>
-            <ThemedText style={styles.subtitle}>{cart.length}品目</ThemedText>
+            <ThemedText style={styles.subtitle}>{`テーブル: T-${String(DEFAULT_SEAT_ID).padStart(3, '0')}`}</ThemedText>
           </ThemedView>
           <ThemedView style={styles.placeholder} />
         </ThemedView>
       </ThemedView>
 
       <ScrollView style={styles.content}>
-        {cart.length > 0 ? (
+        {isLoadingCart ? (
+          <ThemedView style={styles.loadingContainer}>
+            <ThemedText style={styles.loadingText}>カートを読み込んでいます...</ThemedText>
+          </ThemedView>
+        ) : cart.length > 0 ? (
           <ThemedView style={styles.cartContainer}>
             {/* カート商品一覧 */}
             <ThemedView style={styles.itemsContainer}>
@@ -113,10 +178,10 @@ export default function CartScreen() {
                     <ThemedText style={styles.itemName}>{item.name}</ThemedText>
                     <ThemedText style={styles.itemPrice}>¥{item.price}</ThemedText>
                   </ThemedView>
-                  
+
                   <ThemedView style={styles.quantityContainer}>
                     <ThemedView style={[styles.button, styles.quantityButton]}>
-                      <ThemedText 
+                      <ThemedText
                         style={styles.quantityButtonText}
                         onPress={() => updateQuantity(item.id, item.quantity - 1)}
                       >
@@ -125,7 +190,7 @@ export default function CartScreen() {
                     </ThemedView>
                     <ThemedText style={styles.quantity}>{item.quantity}</ThemedText>
                     <ThemedView style={[styles.button, styles.quantityButton]}>
-                      <ThemedText 
+                      <ThemedText
                         style={styles.quantityButtonText}
                         onPress={() => updateQuantity(item.id, item.quantity + 1)}
                       >
@@ -133,11 +198,11 @@ export default function CartScreen() {
                       </ThemedText>
                     </ThemedView>
                   </ThemedView>
-                  
+
                   <ThemedView style={styles.itemTotal}>
                     <ThemedText style={styles.itemTotalText}>¥{item.price * item.quantity}</ThemedText>
                     <ThemedView style={[styles.button, styles.removeButton]}>
-                      <ThemedText 
+                      <ThemedText
                         style={styles.removeButtonText}
                         onPress={() => removeItem(item.id)}
                       >
@@ -169,8 +234,11 @@ export default function CartScreen() {
             {/* 注文確定ボタン */}
             <ThemedView style={styles.orderButtonContainer}>
               <ThemedView style={[styles.button, styles.orderButton]}>
-                <ThemedText style={styles.orderButtonText} onPress={confirmOrder}>
-                  注文を確定する
+                <ThemedText
+                  style={styles.orderButtonText}
+                  onPress={isSubmitting ? undefined : confirmOrder}
+                >
+                  {isSubmitting ? '送信中...' : '注文を確定する'}
                 </ThemedText>
               </ThemedView>
             </ThemedView>
@@ -413,5 +481,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#6b7280',
   },
 });
