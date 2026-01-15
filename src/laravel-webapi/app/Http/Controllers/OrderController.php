@@ -15,10 +15,20 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $orders = Order::paginate(15);
-        $items = Order::with('product')->get();
+        $query = Order::with('product')->orderByDesc('created_at');
+
+        if ($request->filled('seat_id')) {
+            $query->where('seat_id', (int) $request->input('seat_id'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $orders = $query->paginate(15);
+
         return response()->json([
-            'data' => $items,
+            'data' => $orders->items(),
             'meta' => [
                 'total' => $orders->total(),
                 'per_page' => $orders->perPage(),

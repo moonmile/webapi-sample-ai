@@ -8,8 +8,16 @@ const AUTH_TOKEN_KEY = 'authToken';
 
 type OrderStatus = 'pending' | 'in_progress' | 'completed';
 
+interface ProductSummary {
+  id: number;
+  name: string;
+  price?: number;
+  description?: string | null;
+  image_url?: string | null;
+}
+
 interface ApiOrder {
-  product: any;
+  product?: ProductSummary | null;
   id: number;
   seat_id: number;
   product_id: number;
@@ -171,6 +179,10 @@ export default function OrdersPage() {
     }
   };
 
+  const getProductName = (order: ApiOrder) => {
+    return order.product?.name ?? '商品情報なし';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -226,7 +238,7 @@ export default function OrdersPage() {
                   <div>
                     <h3 className="font-bold text-lg">注文 #{order.id}</h3>
                     <p className="text-gray-600">席ID: {order.seat_id}</p>
-                    <p className="text-gray-600">商品名: {order.product.name}</p>
+                    <p className="text-gray-600">商品名: {getProductName(order)}</p>
                     <p className="text-sm text-gray-500">数量: {order.quantity}</p>
                     <p className="text-sm text-gray-500">注文時間: {formatDateTime(order.created_at)}</p>
                   </div>
@@ -257,6 +269,7 @@ export default function OrdersPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-2">注文内容</h3>
                 <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-gray-700">商品名: {getProductName(selectedOrder)}</p>
                   <p className="text-gray-700">商品ID: {selectedOrder.product_id}</p>
                   <p className="text-gray-700">数量: {selectedOrder.quantity}</p>
                   <p className="text-gray-700">ステータス: {getStatusText(selectedOrder.status)}</p>
