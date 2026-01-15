@@ -38,6 +38,10 @@ Route::get('/', function () {
     ]);
 });
 
+// 公開商品の参照 API
+Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+
 
 
 // Hello World エンドポイント
@@ -56,9 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
-    // 商品・カテゴリ管理
-    Route::apiResource('products', ProductController::class);
-    Route::apiResource('categories', CategoryController::class);
+    // 商品・カテゴリの更新系は認証必須
+    Route::apiResource('products', ProductController::class)->except(['index', 'show']);
+    Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
 
     // 商品とカテゴリの紐づけ
     Route::prefix('product-categories')->name('product-categories.')->group(function () {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '../lib/api';
 
 interface Category {
   id: number;
@@ -106,7 +107,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/categories');
+      const response = await fetch(`${API_BASE_URL}/categories`);
       const data = await response.json();
       setCategories(data.data);
       setLoading(false);
@@ -120,7 +121,7 @@ export default function CategoriesPage() {
 
   const fetchProducts = async (categoryId: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/products?category_id=${categoryId}`);
+      const response = await fetch(`${API_BASE_URL}/products?category_id=${categoryId}`);
       const data = await response.json();
       setProducts(data.data || []);
     } catch (error) {
