@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ProductCategory;
 
 class Product extends Model
 {
@@ -39,6 +41,16 @@ class Product extends Model
     ];
 
     /**
+     * 説明用
+     * この商品のカテゴリ関連付け（1対多）
+     */
+    /*
+    public function category() {
+        return $this->belongsTo(Category::class);
+    }
+    */
+
+    /**
      * この商品が属するカテゴリ一覧（多対多）
      */
     public function categories(): BelongsToMany
@@ -49,6 +61,14 @@ class Product extends Model
             'product_id',
             'category_id'
         );
+    }
+
+    /**
+     * product_categories ピボット行へのリレーション（hasMany）
+     */
+    public function productCategories(): HasMany
+    {
+        return $this->hasMany(ProductCategory::class, 'product_id');
     }
 
     /**

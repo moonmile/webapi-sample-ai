@@ -34,19 +34,16 @@ class Category extends Model
     ];
 
     /**
-     * このカテゴリに属する商品一覧（多対多）
+     * 説明用
+     * このカテゴリに属する商品一覧（1対多）
      */
     /*
-    public function products(): BelongsToMany
+    public function products()
     {
-        return $this->belongsToMany(
-            Product::class,
-            'product_categories',
-            'category_id',
-            'product_id'
-        );
+        return $this->belongsTo(Product::class);
     }
     */
+
     /**
      * このカテゴリに属する商品一覧（多対多）
      */

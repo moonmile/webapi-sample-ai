@@ -108,13 +108,16 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
       const data = await response.json();
-      setCategories(data.data);
-      setLoading(false);
+      const list = Array.isArray(data?.data) ? data.data : [];
+      setCategories(list.length ? list : dummyCategories);
     } catch (error) {
       console.error('カテゴリの取得に失敗しました。ダミーデータを使用します:', error);
-      // APIが失敗した場合はダミーデータを使用
       setCategories(dummyCategories);
+    } finally {
       setLoading(false);
     }
   };
@@ -122,11 +125,14 @@ export default function CategoriesPage() {
   const fetchProducts = async (categoryId: number) => {
     try {
       const response = await fetch(`${API_BASE_URL}/products?category_id=${categoryId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
+      }
       const data = await response.json();
-      setProducts(data.data || []);
+      const list = Array.isArray(data?.data) ? data.data : [];
+      setProducts(list.length ? list : dummyProducts[categoryId] || []);
     } catch (error) {
       console.error('商品の取得に失敗しました。ダミーデータを使用します:', error);
-      // APIが失敗した場合はダミーデータを使用
       const categoryProducts = dummyProducts[categoryId] || [];
       setProducts(categoryProducts);
     }

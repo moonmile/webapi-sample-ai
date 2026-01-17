@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Termwind\Components\Raw;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\DataSearchController;
 use App\Http\Middleware\EnsureOrderApiKey;
 
 /*
@@ -39,8 +40,12 @@ Route::get('/', function () {
 });
 
 // 公開商品の参照 API
-Route::apiResource('products', ProductController::class)->only(['index', 'show']);
-Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+# Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+Route::get('/categories/{id}', [CategoryController::class, 'show'])->name('categories.show');
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+# Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 
 
 
@@ -79,8 +84,22 @@ Route::post('/orders', [OrderController::class, 'store'])
     ->name('orders.store');
 
 // CSRF トークンのみで保護されたレビュー投稿 API
-Route::middleware(['api', 'csrf'])->group(function () {
+Route::middleware('csrf')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+});
+
+// DataSearchController のルート定義
+Route::prefix('data-search')->name('data-search.')->group(function () {
+    Route::get('/count', [DataSearchController::class, 'count'])->name('count');
+    Route::get('/average', [DataSearchController::class, 'averagePrice'])->name('averagePrice');
+    Route::get('/max-min', [DataSearchController::class, 'maxMinPrice'])->name('maxMinPrice');
+    Route::get('/sum-by/{category_id}', [DataSearchController::class, 'sumByCategory'])->name('sumByCategory');
+    Route::get('/distinct', [DataSearchController::class, 'distinctOrderProductIds'])->name('distinctOrderProductIds');
+    Route::get('/group-by', [DataSearchController::class, 'groupByCategoryCollection'])->name('groupByCategoryCollection');
+    Route::get('/closure', [DataSearchController::class, 'closureExample'])->name('closureExample');
+    Route::get('/raw-sql', [DataSearchController::class, 'rawSqlExample'])->name('rawSqlExample');
+    Route::get('/sql-log', [DataSearchController::class, 'sqlLogExample'])->name('sqlLogExample');
+    Route::post('/transaction', [DataSearchController::class, 'transactionExample'])->name('transactionExample');
 });
 
 
@@ -128,3 +147,15 @@ Route::middleware('csrf')->group(function () {
 Route::put('seats/{id}', [SeatController::class, 'update'])->name('seats.update');
 */
 
+// 入れ子になったプレフィックス
+/*
+Route::prefix('v1')->group(function () {
+    Route::prefix('example')->group(function () {
+        Route::get('/test', function () {
+            Illuminate\Support\Facades\Log::debug(
+                "Entering v1.example.index route: " . route("v1.example.index") );
+            return response()->json(['message' => 'This is version 1 of the API']);
+        })->name('v1.example.index');
+    });
+});
+*/

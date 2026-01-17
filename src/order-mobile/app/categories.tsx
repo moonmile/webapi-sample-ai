@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import type { StoredCartItem } from '@/app/lib/cartStorage';
-import { loadCartFromStorage, saveCartToStorage } from '@/app/lib/cartStorage';
+import type { StoredCartItem } from './lib/cartStorage';
+import { loadCartFromStorage, saveCartToStorage } from './lib/cartStorage';
 
 interface Category {
   id: number;
@@ -66,20 +67,22 @@ export default function CategoriesScreen() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [cart, setCart] = useState<StoredCartItem[]>([]);
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-    (async () => {
-      const storedCart = await loadCartFromStorage();
-      if (isMounted) {
-        setCart(storedCart);
-      }
-    })();
+      (async () => {
+        const storedCart = await loadCartFromStorage();
+        if (isActive) {
+          setCart(storedCart);
+        }
+      })();
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.id === product.id);
