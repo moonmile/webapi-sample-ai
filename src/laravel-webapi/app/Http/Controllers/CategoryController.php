@@ -100,4 +100,14 @@ class CategoryController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * 第12章追加分
+     * カテゴリの件数を取得する
+     */
+    public function count(): JsonResponse
+    {
+        $count = Category::count();
+        return response()->json(['count' => $count]);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\ProductStock;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -51,6 +52,15 @@ class OrderController extends Controller
             'status' => ['nullable', Rule::in(['pending', 'in_progress', 'completed'])]
         ]);
 
+        // 在庫を確認して、足りない場合はエラーを返す
+        $productStock = ProductStock::where('product_id', $validated['product_id'])->first();
+        if (!$productStock || $productStock->quantity < $validated['quantity']) {
+            return response()->json(['error' => 'no stock'], 400);
+        }
+        // 在庫を減らす
+        $productStock->quantity -= $validated['quantity'];
+        $productStock->save();
+        // 注文を作成する
         $order = Order::create($validated);
 
         return response()->json([

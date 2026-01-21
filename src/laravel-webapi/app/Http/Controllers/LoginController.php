@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\TransientToken;
 
 class LoginController extends Controller
 {
@@ -50,12 +51,17 @@ class LoginController extends Controller
         return response()->json(['error' => 'Unauthorized'], 401);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request): Response
     {
-        $token = $request->user()?->currentAccessToken();
+        $user = $request->user();
 
-        if ($token) {
-            $token->delete();
+        if ($user) {
+            $token = $user->currentAccessToken();
+
+            // PersonalAccessToken の場合のみ削除を行う
+            if ($token && !($token instanceof TransientToken) && method_exists($token, 'delete')) {
+                $token->delete();
+            }
         }
 
         return response()->noContent();
