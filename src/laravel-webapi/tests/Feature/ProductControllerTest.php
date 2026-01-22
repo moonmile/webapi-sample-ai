@@ -6,12 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\ProductStock;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 
 class ProductControllerTest extends TestCase
 {
@@ -155,7 +149,6 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonFragment(['id' => 1]);
     }
-
     /**
      * ログイン認証が必要なパターン（失敗）
      * /api/orders/{id} に GET リクエストを送る
@@ -235,5 +228,4 @@ class ProductControllerTest extends TestCase
             ->postJson('/api/reviews', $postData, $headers);
         $response->assertStatus(419);
     }
-
 }

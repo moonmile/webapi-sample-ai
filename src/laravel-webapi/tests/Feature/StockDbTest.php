@@ -22,7 +22,6 @@ class StockDbTest extends TestCase
         parent::setUp();
         ProductStock::truncate();
         Product::truncate();
-
         // 初期値として seed データを投入
         $this->seed(ProductSeeder::class);
         $this->seed(ProductStockSeeder::class);
