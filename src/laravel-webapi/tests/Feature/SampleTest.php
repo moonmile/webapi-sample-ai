@@ -39,7 +39,6 @@ class SampleTest extends TestCase
         $response->assertStatus(404);
     }
 
-
     /**
      * ログイン認証に失敗した場合のテスト
      */
@@ -51,7 +50,6 @@ class SampleTest extends TestCase
         ]);
         $response->assertStatus(401);
     }
-
 
     /**
      * ログイン認証が必要なエンドポイントへアクセス

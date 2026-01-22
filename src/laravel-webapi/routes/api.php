@@ -104,8 +104,8 @@ Route::prefix('data-search')->name('data-search.')->group(function () {
 
 // 第12章追加分
 // カテゴリの件数を取得するルート
-// Route::get('/categories/info/count', [CategoryController::class, 'count'])->name('categories.count');
-// Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::get('/categories/info/count', [CategoryController::class, 'count'])->name('categories.count');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
 
 
 // 以下は、書籍の実験用に残す
