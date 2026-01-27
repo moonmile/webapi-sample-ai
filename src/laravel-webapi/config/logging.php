@@ -127,6 +127,17 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'cloudwatch' => [
+            'driver' => 'monolog',
+            'handler' => \Monolog\Handler\CloudWatchHandler::class,
+            'formatter' => \Monolog\Formatter\LogstashFormatter::class,
+            'with' => [
+                'logGroup' => env('CLOUDWATCH_LOG_GROUP'),
+                'logStream' => env('CLOUDWATCH_LOG_STREAM'),
+            ],
+        ],
+
+
     ],
 
 ];
