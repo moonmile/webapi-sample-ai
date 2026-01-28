@@ -128,16 +128,21 @@ return [
         ],
 
         'cloudwatch' => [
-            'driver' => 'monolog',
-            'handler' => \Monolog\Handler\CloudWatchHandler::class,
-            'formatter' => \Monolog\Formatter\LogstashFormatter::class,
-            'with' => [
-                'logGroup' => env('CLOUDWATCH_LOG_GROUP'),
-                'logStream' => env('CLOUDWATCH_LOG_STREAM'),
+            'driver' => 'custom',
+            'name' => env('CLOUDWATCH_LOG_NAME', ''),
+            'region' => env('AWS_DEFAULT_REGION', ''),
+            'credentials' => [
+                'key' => env('AWS_ACCESS_KEY_ID', ''),
+                'secret' => env('AWS_SECRET_ACCESS_KEY', '')
             ],
+            'group_name' => env('CLOUDWATCH_LOG_GROUP', 'laravel_app'),
+            'stream_name' => env('CLOUDWATCH_LOG_STREAM', 'laravel_app'),
+            'retention' => env('CLOUDWATCH_LOG_RETENTION_DAYS', 14),
+            'version' => env('CLOUDWATCH_LOG_VERSION', 'latest'),
+            'formatter' => \Monolog\Formatter\JsonFormatter::class,
+            'batch_size' => env('CLOUDWATCH_LOG_BATCH_SIZE', 10000),
+            'via' => \Pagevamp\Logger::class,
         ],
-
-
     ],
 
 ];
