@@ -42,7 +42,6 @@
 }
 ```
 
-
 ### 1. CloudWatch Logs のロググループとストリームを作成
 ```bash
 aws logs create-log-group --log-group-name sample-webapi
@@ -261,16 +260,25 @@ AWS_DEFAULT_REGION=ap-northeast-1
 
 2) コンテナをビルド＆起動。
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose exec app php artisan key:generate --force
+docker compose -f docker-compose.prod.yml build 
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml exec app php artisan key:generate --force
 ```
 
 3) Laravel 内でログを吐く。
+
 ```bash
-docker compose exec app php artisan tinker --execute="Log::info('hello from laravel docker');"
+docker compose -f docker-compose.prod.yml exec app php artisan tinker --execute="Log::info('hello from laravel docker');"
 ```
 
 4) CloudWatch Logs で laravel-docker ストリームにログが届いているか確認。
+
+外部から api/hello にアクセスしてログが出力されていることを確認
+
+```bash
+curl http://ec2-35-75-9-46.ap-northeast-1.compute.amazonaws.com/api/hello
+```
+
 
 ### 6. 障害切り分けメモ
 - 出ない場合は IAM 権限（特に logs:CreateLogStream と logs:PutLogEvents）を確認。
