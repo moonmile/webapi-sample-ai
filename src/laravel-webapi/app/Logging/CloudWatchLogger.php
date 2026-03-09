@@ -6,6 +6,7 @@ use Aws\CloudWatchLogs\CloudWatchLogsClient;
 use Aws\Exception\AwsException;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\LogRecord;
 use Monolog\Logger;
 
 class CloudWatchLogger
@@ -70,10 +71,10 @@ class CloudWatchHandler extends AbstractProcessingHandler
         $this->initializeGroupAndStream();
     }
 
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $event = [
-            'message' => (string) $record['formatted'],
+            'message' => (string) $record->formatted,
             'timestamp' => (int) round(microtime(true) * 1000),
         ];
 
