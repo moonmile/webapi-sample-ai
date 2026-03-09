@@ -52,22 +52,29 @@ aws logs create-log-stream --log-group-name sample-webapi --log-stream-name ec2-
 
 ### 2. EC2（ホストOS）からの直接出力テスト
 ```powershell
+$Region = "ap-northeast-1"
 $Message = "hello from ec2 $(Get-Date -Format o)"
 $SequenceToken = aws logs describe-log-streams `
+    --region $Region `
     --log-group-name sample-webapi `
     --log-stream-name-prefix ec2-manual `
     --query 'logStreams[0].uploadSequenceToken' `
     --output text
 
 aws logs put-log-events `
+    --region $Region `
     --log-group-name sample-webapi `
     --log-stream-name ec2-manual `
     --log-events "timestamp=$([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()),message=$Message" `
     --sequence-token $SequenceToken
 ```
+
 CloudWatch Logs でメッセージが見えれば OK。
 
+ログの順序が保たれるように sequenceToken を取得してから put-log-events するのがポイント。
+
 ### 3. PHP 単体スクリプトでの出力確認
+
 ```bash
 cat > /tmp/cw_test.php <<'PHP'
 <?php

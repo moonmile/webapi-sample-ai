@@ -238,8 +238,8 @@ class HttpUseCaseTest extends TestCase
 
         // 注文件数のチェック
         $this->assertEquals(1, Order::count());
-
     }
 }
+
 
 
