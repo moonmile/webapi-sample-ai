@@ -18,14 +18,21 @@ class CloudWatchLogger
      */
     public function __invoke(array $config): Logger
     {
-        $client = new CloudWatchLogsClient([
+        $options = [
             'region' => $config['region'] ?? env('AWS_DEFAULT_REGION', 'ap-northeast-1'),
             'version' => $config['version'] ?? 'latest',
-            'credentials' => [
-                'key' => $config['credentials']['key'] ?? env('AWS_ACCESS_KEY_ID'),
-                'secret' => $config['credentials']['secret'] ?? env('AWS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
+        ];
+
+        $credentials = array_filter([
+            'key' => $config['credentials']['key'] ?? env('AWS_ACCESS_KEY_ID'),
+            'secret' => $config['credentials']['secret'] ?? env('AWS_SECRET_ACCESS_KEY'),
+        ], fn ($v) => ! empty($v));
+
+        if (! empty($credentials)) {
+            $options['credentials'] = $credentials;
+        }
+
+        $client = new CloudWatchLogsClient($options);
 
         $group = $config['group_name'] ?? 'laravel_app';
         $stream = $config['stream_name'] ?? 'laravel_app';
