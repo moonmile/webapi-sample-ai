@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine AS base
+FROM php:8.4-fpm-alpine AS base
 
 # 必要なPHP拡張をインストール（適宜追加）
 RUN apk add --no-cache \
