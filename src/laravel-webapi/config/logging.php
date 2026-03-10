@@ -130,17 +130,11 @@ return [
         'cloudwatch' => [
             'driver' => 'custom',
             'via' => App\Logging\CloudWatchLogger::class,
-            'name' => env('CLOUDWATCH_LOG_NAME', 'cloudwatch'),
             'region' => env('AWS_DEFAULT_REGION', 'ap-northeast-1'),
-            'credentials' => [
-                'key' => env('AWS_ACCESS_KEY_ID', ''),
-                'secret' => env('AWS_SECRET_ACCESS_KEY', ''),
-            ],
             'group_name' => env('CLOUDWATCH_LOG_GROUP', 'laravel_app'),
             'stream_name' => env('CLOUDWATCH_LOG_STREAM', 'laravel_app'),
             'retention' => env('CLOUDWATCH_LOG_RETENTION_DAYS', 14),
             'version' => env('CLOUDWATCH_LOG_VERSION', 'latest'),
-            'formatter' => \Monolog\Formatter\JsonFormatter::class,
         ],
     ],
 
