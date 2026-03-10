@@ -9,6 +9,7 @@ class HelloController extends Controller
     //
     public function index()
     {
+        \Log::info('HelloController index method called.');
         return response()->json([
             'message' => 'Hello, World!',
             'now' => now()->toISOString(),
