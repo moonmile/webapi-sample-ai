@@ -9,13 +9,76 @@ use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\LogRecord;
 use Monolog\Logger;
 
+/**
+ * CloudWatch Logs にログを送るクラス
+ */
+
 class CloudWatchLogger
 {
-    /**
-     * Create a custom Monolog instance.
-     *
-     * @param  array<string,mixed>  $config
-     */
+    public function __invoke(array $config)
+    {
+        $client = new CloudWatchLogsClient([
+            'region' => $config['region'],
+            'version' => 'latest',
+            'credentials' => $config['credentials'],
+        ]);
+
+        $handler = new CloudWatchHandler(
+            $client,
+            $config['group_name'],
+            $config['stream_name'],
+            Logger::DEBUG
+        );
+
+        // JSON 形式で CloudWatch に送る
+        $handler->setFormatter(new JsonFormatter());
+
+        $logger = new Logger('cloudwatch');
+        $logger->pushHandler($handler);
+
+        return $logger;
+    }
+}
+
+class CloudWatchHandler extends AbstractProcessingHandler
+{
+    protected $client;
+    protected $group;
+    protected $stream;
+    protected $sequenceToken;
+
+    public function __construct(CloudWatchLogsClient $client, $group, $stream, $level = Logger::DEBUG, $bubble = true)
+    {
+        parent::__construct($level, $bubble);
+
+        $this->client = $client;
+        $this->group = $group;
+        $this->stream = $stream;
+    }
+    protected function write(LogRecord $record): void
+    {
+        $params = [
+            'logGroupName'  => $this->group,
+            'logStreamName' => $this->stream,
+            'logEvents'     => [
+                [
+                    'timestamp' => round(microtime(true) * 1000),
+                    'message'   => $record->formatted,
+                ],
+            ],
+        ];
+
+        if ($this->sequenceToken) {
+            $params['sequenceToken'] = $this->sequenceToken;
+        }
+        $result = $this->client->putLogEvents($params);
+        // 次の書き込みのために sequenceToken を更新
+        $this->sequenceToken = $result['nextSequenceToken'];
+    }
+}
+/*
+class CloudWatchLogger
+{
     public function __invoke(array $config): Logger
     {
         $options = [
@@ -152,3 +215,4 @@ class CloudWatchHandler extends AbstractProcessingHandler
         }
     }
 }
+*/
