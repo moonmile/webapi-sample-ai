@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { submitOrderItem } from '../lib/api';
-
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
+import { CartItem, getTotalPrice, getTotalItems } from '../lib/cartUtils';
 
 const DEFAULT_SEAT_ID = 1;
 const SEAT_STORAGE_KEY = 'seat_id';
@@ -63,14 +57,6 @@ export default function CartPage() {
     localStorage.setItem('cart', JSON.stringify(newCart));
   };
 
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  };
-
   const confirmOrder = async () => {
     if (cart.length === 0) {
       alert('カートが空です。商品を追加してください。');
@@ -96,7 +82,7 @@ export default function CartPage() {
       const orderData = {
         seat_id: seatId,
         items: cart,
-        total_amount: getTotalPrice(),
+        total_amount: getTotalPrice(cart),
         guest_count: guests,
       };
 
@@ -197,7 +183,7 @@ export default function CartPage() {
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
               <div className="flex justify-between items-center text-lg mb-2">
                 <span>商品数:</span>
-                <span>{getTotalItems()}点</span>
+                <span>{getTotalItems(cart)}点</span>
               </div>
               <div className="flex justify-between items-center text-lg mb-4">
                 <span>お客様:</span>
@@ -206,7 +192,7 @@ export default function CartPage() {
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center text-2xl font-bold text-red-600">
                   <span>合計金額:</span>
-                  <span>¥{getTotalPrice()}</span>
+                  <span>¥{getTotalPrice(cart)}</span>
                 </div>
               </div>
             </div>
