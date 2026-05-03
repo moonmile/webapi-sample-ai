@@ -135,30 +135,6 @@ export default function OrderHistoryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-blue-600 text-white p-4 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <button
-              onClick={goBack}
-              className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg mr-4 transition-colors"
-            >
-              ← 戻る
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold">📋 注文履歴</h1>
-              <p className="text-blue-100">テーブル: T-001</p>
-            </div>
-          </div>
-          <button
-            onClick={goToPayment}
-            className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-semibold transition-colors"
-          >
-            💳 お会計
-          </button>
-        </div>
-      </header>
-
       <div className="container mx-auto p-4 max-w-4xl">
         {orders.length === 0 ? (
           <div className="text-center py-12">

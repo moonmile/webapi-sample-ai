@@ -182,22 +182,6 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-red-600 text-white p-4 shadow-lg">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">🍣 お寿司注文</h1>
-            <p className="text-red-100">テーブル: T-001</p>
-          </div>
-          <button
-            onClick={goToCart}
-            className="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg font-semibold transition-colors relative"
-          >
-            🛒 カート ({cartItemCount})
-          </button>
-        </div>
-      </header>
-
       <div className="container mx-auto p-4">
         {!selectedCategory ? (
           /* カテゴリ一覧 */

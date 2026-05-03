@@ -121,22 +121,6 @@ export default function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-green-600 text-white p-4 shadow-lg">
-        <div className="flex items-center">
-          <button
-            onClick={goBack}
-            className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-lg mr-4 transition-colors"
-          >
-            ← 戻る
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">💳 お会計</h1>
-            <p className="text-green-100">テーブル: T-001</p>
-          </div>
-        </div>
-      </header>
-
       <div className="container mx-auto p-4 max-w-2xl">
         {/* 注文内容 */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
