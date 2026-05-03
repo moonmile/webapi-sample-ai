@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Home() {
-  const [guests, setGuests] = useState(1);
+  const [guests, setGuests] = useState(2); // デフォルト2
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tableNumber = searchParams.get('table') || 'T-001'; // 動的に取得、デフォルトT-001
 
   const startOrder = () => {
     // セッションストレージに人数を保存
@@ -13,51 +15,60 @@ export default function Home() {
     router.push('/categories');
   };
 
+  const handleGuestSelect = (num: number) => {
+    setGuests(num);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-red-600 mb-2">🍣</h1>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">お寿司注文システム</h2>
-          <p className="text-gray-600">ようこそ！ご着席ありがとうございます</p>
+          <h1 className="text-4xl font-bold text-green-600 mb-2">🍣 日経寿司へようこそ</h1>
+          <p className="text-gray-600">心を込めたお寿司をお楽しみください</p>
         </div>
 
         <div className="mb-8">
+          <p className="text-lg font-semibold text-gray-700 mb-4">
+            テーブル番号: {tableNumber}
+          </p>
           <label className="block text-lg font-semibold text-gray-700 mb-4">
-            ご利用人数を選択してください
+            何名様でお越しですか？
           </label>
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+              <button
+                key={num}
+                onClick={() => handleGuestSelect(num)}
+                className={`px-3 py-2 rounded-lg font-bold transition-colors ${
+                  guests === num
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                {num}人
+              </button>
+            ))}
+          </div>
+          <div>
             <button
-              onClick={() => setGuests(Math.max(1, guests - 1))}
-              className="w-12 h-12 rounded-full bg-red-100 text-red-600 font-bold text-xl hover:bg-red-200 transition-colors"
-              disabled={guests <= 1}
+              onClick={() => handleGuestSelect(9)}
+              className={`w-full px-4 py-2 rounded-lg font-bold transition-colors ${
+                guests >= 9
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
             >
-              −
-            </button>
-            <div className="w-20 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-              <span className="text-3xl font-bold text-gray-800">{guests}</span>
-            </div>
-            <button
-              onClick={() => setGuests(Math.min(8, guests + 1))}
-              className="w-12 h-12 rounded-full bg-red-100 text-red-600 font-bold text-xl hover:bg-red-200 transition-colors"
-              disabled={guests >= 8}
-            >
-              ＋
+              9人以上
             </button>
           </div>
-          <p className="text-sm text-gray-500 mt-2">最大8名様まで</p>
         </div>
 
         <button
           onClick={startOrder}
-          className="w-full bg-red-600 text-white text-xl font-bold py-4 rounded-xl hover:bg-red-700 transition-colors shadow-lg"
+          className="w-full bg-white text-green-600 text-xl font-bold py-4 rounded-xl border-2 border-green-600 hover:bg-green-50 transition-colors shadow-lg"
         >
-          注文開始
+          注文開始 →
         </button>
-
-        <div className="mt-6 text-sm text-gray-500">
-          <p>テーブル番号: <span className="font-semibold">T-001</span></p>
-        </div>
       </div>
     </div>
   );
