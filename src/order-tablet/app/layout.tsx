@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 const navigationLinks = [
   { href: "/", label: "ホーム" },
-  { href: "/categories", label: "カテゴリー" },
+  { href: "/menu", label: "メニュー" },
   { href: "/cart", label: "カート" },
   { href: "/order-complete", label: "注文状況" },
   { href: "/reviews", label: "レビュー投稿" },

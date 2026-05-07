@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "PowerShell(Get-ChildItem -Path \"h:\\\\webapi-sample-ai\\\\src\\\\order-tablet\" -Recurse -Force | Select-Object -Property FullName, @{Name='Type';Expression={if\\($_.PSIsContainer\\) {'Directory'} else {'File'}}} | Sort-Object FullName | Format-Table -AutoSize)"
     ]
   }
 }
