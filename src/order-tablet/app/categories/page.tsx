@@ -7,15 +7,29 @@ import { API_BASE_URL } from '../lib/api';
 interface Category {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
+  products_count?: number;
+  products?: Product[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Product {
   id: number;
   name: string;
   price: number;
-  description: string;
-  image_url?: string;
+  description: string | null;
+  image_url: string | null;
+  categories?: Omit<Category, 'products'>[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
 }
 
 const FOOD_EMOJIS: Record<number, string> = {
@@ -29,91 +43,98 @@ const CATEGORY_COLORS: Record<number, string> = {
 };
 
 const dummyCategories: Category[] = [
-  { id: 1, name: '握り寿司', description: '新鮮なネタを使った伝統的な握り寿司です。' },
-  { id: 2, name: '巻き寿司', description: '海苔で巻いた美味しい巻き寿司各種です。' },
-  { id: 3, name: '軍艦巻き', description: 'いくらやウニなどの軍艦巻きです。' },
-  { id: 4, name: '海鮮丼', description: '新鮮な海の幸をのせた豪華な海鮮丼です。' },
-  { id: 5, name: '特選寿司', description: '厳選された高級ネタを使用した特選寿司です。' },
-  { id: 6, name: 'サイドメニュー', description: '寿司と一緒に楽しめるサイドメニューです。' },
-  { id: 7, name: '汁物', description: '温かい汁物で食事を彩ります。' },
-  { id: 8, name: 'デザート', description: '食後に楽しめる和風デザートです。' },
-  { id: 9, name: '飲み物', description: 'お茶やジュースなどの飲み物です。' },
-  { id: 10, name: '季節限定', description: '季節の食材を使った限定メニューです。' },
+  { id: 1, name: '握り寿司', description: '新鮮なネタを使った伝統的な握り寿司です。', products_count: 8 },
+  { id: 2, name: '巻き寿司', description: '海苔で巻いた美味しい巻き寿司各種です。', products_count: 5 },
+  { id: 3, name: '軍艦巻き', description: 'いくらやウニなどの軍艦巻きです。', products_count: 4 },
+  { id: 4, name: '海鮮丼', description: '新鮮な海の幸をのせた豪華な海鮮丼です。', products_count: 4 },
+  { id: 5, name: '特選寿司', description: '厳選された高級ネタを使用した特選寿司です。', products_count: 5 },
+  { id: 6, name: 'サイドメニュー', description: '寿司と一緒に楽しめるサイドメニューです。', products_count: 7 },
+  { id: 7, name: '汁物', description: '温かい汁物で食事を彩ります。', products_count: 2 },
+  { id: 8, name: 'デザート', description: '食後に楽しめる和風デザートです。', products_count: 5 },
+  { id: 9, name: '飲み物', description: 'お茶やジュースなどの飲み物です。', products_count: 4 },
+  { id: 10, name: '季節限定', description: '季節の食材を使った限定メニューです。', products_count: 2 },
 ];
 
-const dummyProducts: Record<number, Product[]> = {
+const dummyProductsByCategory: Record<number, Product[]> = {
   1: [
-    { id: 1, name: 'まぐろ', price: 150, description: '新鮮なまぐろの赤身です。' },
-    { id: 2, name: 'サーモン', price: 120, description: 'ノルウェー産の新鮮なサーモンです。' },
-    { id: 3, name: 'えび', price: 100, description: 'ぷりぷりの甘えびです。' },
-    { id: 4, name: 'たまご', price: 80, description: 'ふわふわの厚焼き玉子です。' },
-    { id: 5, name: 'はまち', price: 140, description: '脂ののった新鮮なはまちです。' },
-    { id: 6, name: 'いか', price: 110, description: '歯ごたえの良いイカです。' },
-    { id: 33, name: '中とろ', price: 200, description: '脂ののった中とろです。' },
-    { id: 34, name: '活〆穴子', price: 200, description: '活〆の穴子です。' },
+    { id: 1, name: 'まぐろ', price: 150, description: '新鮮なまぐろの赤身です。', image_url: null },
+    { id: 2, name: 'サーモン', price: 120, description: 'ノルウェー産の新鮮なサーモンです。', image_url: null },
+    { id: 3, name: 'えび', price: 100, description: 'ぷりぷりの甘えびです。', image_url: null },
+    { id: 4, name: 'たまご', price: 80, description: 'ふわふわの厚焼き玉子です。', image_url: null },
+    { id: 5, name: 'はまち', price: 140, description: '脂ののった新鮮なはまちです。', image_url: null },
+    { id: 6, name: 'いか', price: 110, description: '歯ごたえの良いイカです。', image_url: null },
+    { id: 33, name: '中とろ', price: 200, description: '脂ののった中とろです。', image_url: null },
+    { id: 34, name: '活〆穴子', price: 200, description: '活〆の穴子です。', image_url: null },
   ],
   2: [
-    { id: 7, name: 'かっぱ巻き', price: 120, description: 'きゅうりの細巻きです。' },
-    { id: 8, name: 'てっか巻き', price: 180, description: 'まぐろの細巻きです。' },
-    { id: 9, name: 'カリフォルニアロール', price: 280, description: 'アボカドとカニの裏巻きです。' },
-    { id: 10, name: '太巻き', price: 220, description: '具だくさんの太巻きです。' },
-    { id: 35, name: 'にぎり細巻他', price: 200, description: 'にぎり、細巻きなど。' },
+    { id: 7, name: 'かっぱ巻き', price: 120, description: 'きゅうりの細巻きです。', image_url: null },
+    { id: 8, name: 'てっか巻き', price: 180, description: 'まぐろの細巻きです。', image_url: null },
+    { id: 9, name: 'カリフォルニアロール', price: 280, description: 'アボカドとカニの裏巻きです。', image_url: null },
+    { id: 10, name: '太巻き', price: 220, description: '具だくさんの太巻きです。', image_url: null },
+    { id: 35, name: 'にぎり細巻他', price: 200, description: 'にぎり、細巻きなど。', image_url: null },
   ],
   3: [
-    { id: 11, name: 'いくら軍艦', price: 200, description: 'プチプチ食感のいくらです。' },
-    { id: 12, name: 'うに軍艦', price: 250, description: '濃厚なうにの軍艦巻きです。' },
-    { id: 13, name: 'ねぎとろ軍艦', price: 180, description: 'ねぎとろの軍艦巻きです。' },
-    { id: 14, name: 'コーン軍艦', price: 120, description: 'マヨネーズコーンの軍艦巻きです。' },
+    { id: 11, name: 'いくら軍艦', price: 200, description: 'プチプチ食感のいくらです。', image_url: null },
+    { id: 12, name: 'うに軍艦', price: 250, description: '濃厚なうにの軍艦巻きです。', image_url: null },
+    { id: 13, name: 'ねぎとろ軍艦', price: 180, description: 'ねぎとろの軍艦巻きです。', image_url: null },
+    { id: 14, name: 'コーン軍艦', price: 120, description: 'マヨネーズコーンの軍艦巻きです。', image_url: null },
   ],
   4: [
-    { id: 15, name: '特上海鮮丼', price: 890, description: '新鮮な海の幸がたっぷりです。' },
-    { id: 16, name: 'まぐろ丼', price: 680, description: 'まぐろづくしの贅沢丼です。' },
-    { id: 17, name: 'サーモン丼', price: 580, description: 'サーモンがたっぷりの丼です。' },
-    { id: 36, name: 'うな丼にぎり一貫', price: 200, description: '月替わり／フェア。' },
+    { id: 15, name: '特上海鮮丼', price: 890, description: '新鮮な海の幸がたっぷりです。', image_url: null },
+    { id: 16, name: 'まぐろ丼', price: 680, description: 'まぐろづくしの贅沢丼です。', image_url: null },
+    { id: 17, name: 'サーモン丼', price: 580, description: 'サーモンがたっぷりの丼です。', image_url: null },
+    { id: 36, name: 'うな丼にぎり一貫', price: 200, description: '月替わり／フェア。', image_url: null },
   ],
   5: [
-    { id: 18, name: '大とろ', price: 380, description: '最高級の大トロです。' },
-    { id: 19, name: '中とろ', price: 280, description: '脂ののった中とろです。' },
-    { id: 20, name: 'ウニ', price: 320, description: '北海道産の極上ウニです。' },
-    { id: 21, name: 'あわび', price: 420, description: '肉厚なあわびです。' },
-    { id: 37, name: '極み熟成　中とろ一貫', price: 200, description: '極み熟成の中とろです。' },
+    { id: 18, name: '大とろ', price: 380, description: '最高級の大トロです。', image_url: null },
+    { id: 19, name: '中とろ', price: 280, description: '脂ののった中とろです。', image_url: null },
+    { id: 20, name: 'ウニ', price: 320, description: '北海道産の極上ウニです。', image_url: null },
+    { id: 21, name: 'あわび', price: 420, description: '肉厚なあわびです。', image_url: null },
+    { id: 37, name: '極み熟成　中とろ一貫', price: 200, description: '極み熟成の中とろです。', image_url: null },
   ],
   6: [
-    { id: 22, name: '茶碗蒸し', price: 180, description: 'なめらかな茶碗蒸しです。' },
-    { id: 23, name: '枝豆', price: 120, description: '塩茹でした枝豆です。' },
-    { id: 24, name: 'サラダ', price: 200, description: '新鮮野菜のサラダです。' },
-    { id: 38, name: '伝説の鶏唐揚げ', price: 280, description: 'ジューシーな唐揚げです。' },
-    { id: 39, name: '大粒ほたて一貫', price: 200, description: '大粒ほたて、あぶり、天ぷら他。' },
-    { id: 40, name: '特大生サーモン一貫', price: 200, description: 'くんかん他。' },
-    { id: 41, name: 'たっぷりいくら手巻一貫', price: 200, description: 'おすすめ。' },
+    { id: 22, name: '茶碗蒸し', price: 180, description: 'なめらかな茶碗蒸しです。', image_url: null },
+    { id: 23, name: '枝豆', price: 120, description: '塩茹でした枝豆です。', image_url: null },
+    { id: 24, name: 'サラダ', price: 200, description: '新鮮野菜のサラダです。', image_url: null },
+    { id: 38, name: '伝説の鶏唐揚げ', price: 280, description: 'ジューシーな唐揚げです。', image_url: null },
+    { id: 39, name: '大粒ほたて一貫', price: 200, description: '大粒ほたて、あぶり、天ぷら他。', image_url: null },
+    { id: 40, name: '特大生サーモン一貫', price: 200, description: 'くんかん他。', image_url: null },
+    { id: 41, name: 'たっぷりいくら手巻一貫', price: 200, description: 'おすすめ。', image_url: null },
   ],
   7: [
-    { id: 25, name: 'あら汁', price: 150, description: '魚のあらで作った汁物です。' },
-    { id: 26, name: 'みそ汁', price: 100, description: '定番のみそ汁です。' },
+    { id: 25, name: 'あら汁', price: 150, description: '魚のあらで作った汁物です。', image_url: null },
+    { id: 26, name: 'みそ汁', price: 100, description: '定番のみそ汁です。', image_url: null },
   ],
   8: [
-    { id: 27, name: 'わらび餅', price: 180, description: 'きな粉をまぶしたわらび餅です。' },
-    { id: 28, name: 'アイスクリーム', price: 150, description: 'バニラアイスクリームです。' },
-    { id: 42, name: 'マンゴーシェイク', price: 480, description: '濃厚マンゴーシェイクです。' },
-    { id: 43, name: 'ストロベリーシェイク', price: 480, description: 'いちごシェイクです。' },
-    { id: 44, name: '抹茶とホワイトチョコ', price: 480, description: '抹茶スイーツです。' },
+    { id: 27, name: 'わらび餅', price: 180, description: 'きな粉をまぶしたわらび餅です。', image_url: null },
+    { id: 28, name: 'アイスクリーム', price: 150, description: 'バニラアイスクリームです。', image_url: null },
+    { id: 42, name: 'マンゴーシェイク', price: 480, description: '濃厚マンゴーシェイクです。', image_url: null },
+    { id: 43, name: 'ストロベリーシェイク', price: 480, description: 'いちごシェイクです。', image_url: null },
+    { id: 44, name: '抹茶とホワイトチョコ', price: 480, description: '抹茶スイーツです。', image_url: null },
   ],
   9: [
-    { id: 29, name: '緑茶', price: 80, description: '香り高い緑茶です。' },
-    { id: 30, name: 'ウーロン茶', price: 80, description: 'さっぱりとしたウーロン茶です。' },
-    { id: 31, name: 'オレンジジュース', price: 120, description: '100%オレンジジュースです。' },
-    { id: 45, name: '野菜フルーツジュース', price: 180, description: '野菜と果物のミックスです。' },
+    { id: 29, name: '緑茶', price: 80, description: '香り高い緑茶です。', image_url: null },
+    { id: 30, name: 'ウーロン茶', price: 80, description: 'さっぱりとしたウーロン茶です。', image_url: null },
+    { id: 31, name: 'オレンジジュース', price: 120, description: '100%オレンジジュースです。', image_url: null },
+    { id: 45, name: '野菜フルーツジュース', price: 180, description: '野菜と果物のミックスです。', image_url: null },
   ],
   10: [
-    { id: 32, name: '秋刀魚', price: 200, description: '脂ののった秋刀魚です。' },
-    { id: 33, name: 'かつお', price: 180, description: '初鰹の季節限定メニューです。' },
+    { id: 32, name: '秋刀魚', price: 200, description: '脂ののった秋刀魚です。', image_url: null },
+    { id: 33, name: 'かつお', price: 180, description: '初鰹の季節限定メニューです。', image_url: null },
   ],
 };
 
+function categoryEmoji(categoryId: number): string {
+  return FOOD_EMOJIS[categoryId] ?? '🍽️';
+}
+
+function categoryColor(categoryId: number): string {
+  return CATEGORY_COLORS[categoryId] ?? '#888';
+}
+
 function ProductImage({ product, categoryId }: { product: Product; categoryId: number }) {
   const [imgError, setImgError] = useState(false);
-  const emoji = FOOD_EMOJIS[categoryId] ?? '🍽️';
-  const color = CATEGORY_COLORS[categoryId] ?? '#888';
+  const color = categoryColor(categoryId);
 
   if (product.image_url && !imgError) {
     return (
@@ -131,7 +152,7 @@ function ProductImage({ product, categoryId }: { product: Product; categoryId: n
       className="w-full h-full flex items-center justify-center text-5xl"
       style={{ background: `linear-gradient(135deg, ${color}22, ${color}44)` }}
     >
-      {emoji}
+      {categoryEmoji(categoryId)}
     </div>
   );
 }
@@ -140,8 +161,9 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<{ id: number; name: string; price: number; quantity: number }[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
   const [addedId, setAddedId] = useState<number | null>(null);
   const categoryBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -149,43 +171,60 @@ export default function CategoriesPage() {
   useEffect(() => {
     fetchCategories();
     const saved = localStorage.getItem('cart');
-    if (saved) setCart(JSON.parse(saved));
+    if (saved) {
+      try {
+        setCart(JSON.parse(saved));
+      } catch {
+        // ignore corrupt cart data
+      }
+    }
   }, []);
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/categories`);
-      if (!res.ok) throw new Error();
+      const res = await fetch(`${API_BASE_URL}/categories`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const list = Array.isArray(data?.data) ? data.data : [];
+      const list: Category[] = Array.isArray(data?.data) ? data.data : [];
       const cats = list.length ? list : dummyCategories;
       setCategories(cats);
-      setSelectedCategory(cats[0]);
-      loadProducts(cats[0].id);
+      const first = cats[0];
+      setSelectedCategory(first);
+      await loadProductsForCategory(first);
     } catch {
       setCategories(dummyCategories);
-      setSelectedCategory(dummyCategories[0]);
-      loadProducts(dummyCategories[0].id);
+      const first = dummyCategories[0];
+      setSelectedCategory(first);
+      setProducts(dummyProductsByCategory[first.id] ?? []);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadProducts = async (categoryId: number) => {
+  // GET /categories/{id} returns Category with products array (詳細取得時のみ)
+  const loadProductsForCategory = async (category: Category) => {
+    setProductsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/products?category_id=${categoryId}`);
-      if (!res.ok) throw new Error();
+      const res = await fetch(`${API_BASE_URL}/categories/${category.id}`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const list = Array.isArray(data?.data) ? data.data : [];
-      setProducts(list.length ? list : dummyProducts[categoryId] ?? []);
+      const detail: Category = data?.data ?? {};
+      const list = Array.isArray(detail.products) ? detail.products : [];
+      setProducts(list.length ? list : dummyProductsByCategory[category.id] ?? []);
     } catch {
-      setProducts(dummyProducts[categoryId] ?? []);
+      setProducts(dummyProductsByCategory[category.id] ?? []);
+    } finally {
+      setProductsLoading(false);
     }
   };
 
   const selectCategory = (category: Category) => {
     setSelectedCategory(category);
-    loadProducts(category.id);
+    loadProductsForCategory(category);
   };
 
   const addToCart = (product: Product) => {
@@ -221,6 +260,11 @@ export default function CategoriesPage() {
           <span className="text-white font-bold text-lg">
             {selectedCategory?.name ?? '商品一覧'}
           </span>
+          {selectedCategory?.products_count != null && (
+            <span className="text-gray-400 text-sm">
+              ({selectedCategory.products_count}品)
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 text-gray-300 text-sm">
           <span>テーブル: T-001</span>
@@ -231,7 +275,11 @@ export default function CategoriesPage() {
 
       {/* 商品グリッド */}
       <div className="flex-1 overflow-y-auto p-3">
-        {products.length === 0 ? (
+        {productsLoading ? (
+          <div className="flex items-center justify-center h-full text-gray-400 text-lg">
+            読み込み中...
+          </div>
+        ) : products.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400 text-lg">
             このカテゴリには商品がありません
           </div>
@@ -273,12 +321,17 @@ export default function CategoriesPage() {
                   {/* 商品情報 */}
                   <div className="p-2">
                     <p className="text-orange-400 font-bold text-sm leading-tight">
-                      {product.price}
+                      {product.price.toLocaleString()}
                       <span className="text-xs">円</span>
                     </p>
                     <p className="text-white text-xs mt-0.5 leading-tight line-clamp-2">
                       {product.name}
                     </p>
+                    {product.description && (
+                      <p className="text-gray-400 text-xs mt-0.5 leading-tight line-clamp-1">
+                        {product.description}
+                      </p>
+                    )}
                   </div>
                 </button>
               );
@@ -309,7 +362,10 @@ export default function CategoriesPage() {
                   borderTop: isActive ? '3px solid #fc8181' : '3px solid transparent',
                 }}
               >
-                {FOOD_EMOJIS[cat.id] ?? '🍽️'} {cat.name}
+                {categoryEmoji(cat.id)} {cat.name}
+                {cat.products_count != null && (
+                  <span className="ml-1 text-xs opacity-70">({cat.products_count})</span>
+                )}
               </button>
             );
           })}
