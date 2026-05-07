@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 const navigationLinks = [
   { href: "/", label: "ホーム" },
-  { href: "/categories", label: "カテゴリー" },
+  { href: "/products", label: "商品一覧" },
   { href: "/cart", label: "カート" },
   { href: "/order-complete", label: "注文状況" },
   { href: "/reviews", label: "レビュー投稿" },
@@ -57,7 +57,7 @@ export default function RootLayout({
               </nav>
             </div>
           </header>
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 flex flex-col min-h-0">{children}</main>
           <footer className="bg-white py-4 text-center text-xs text-slate-500">
             © {currentYear} 日経寿司 / 店内タブレットシステム
           </footer>

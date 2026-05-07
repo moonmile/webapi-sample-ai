@@ -116,7 +116,7 @@ export default function OrderHistoryPage() {
   };
 
   const goBack = () => {
-    router.push('/categories');
+    router.push('/products');
   };
 
   const goToPayment = () => {

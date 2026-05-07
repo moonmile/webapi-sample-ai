@@ -31,8 +31,8 @@ export default function OrderCompletePage() {
     router.push('/order-history');
   };
 
-  const goToCategories = () => {
-    router.push('/categories');
+  const goToProducts = () => {
+    router.push('/products');
   };
 
   const goToHome = () => {
@@ -110,7 +110,7 @@ export default function OrderCompletePage() {
           </button>
           
           <button
-            onClick={goToCategories}
+            onClick={goToProducts}
             className="w-full bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold py-4 rounded-xl transition-colors shadow-lg"
           >
             🍣 追加注文する

@@ -10,7 +10,7 @@ export default function Home() {
   const startOrder = () => {
     // セッションストレージに人数を保存
     sessionStorage.setItem('guests', guests.toString());
-    router.push('/categories');
+    router.push('/products');
   };
 
   return (

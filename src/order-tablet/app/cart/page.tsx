@@ -103,7 +103,7 @@ export default function CartPage() {
   };
 
   const goBack = () => {
-    router.push('/categories');
+    router.push('/products');
   };
 
   return (
